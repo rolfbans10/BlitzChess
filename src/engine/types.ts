@@ -1,6 +1,7 @@
 export enum PieceColor {
   WHITE,
   BLACK,
+  NONE,
 }
 
 export enum PieceType {
@@ -10,4 +11,5 @@ export enum PieceType {
   ROOK,
   QUEEN,
   KING,
+  NULL,
 }

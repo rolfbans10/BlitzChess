@@ -1,12 +1,13 @@
 import { Piece } from "@/engine/piece";
+import { NullPiece } from "@/engine/pieces/NullPiece";
 
 export class Square {
-  private piece: Piece | null = null;
+  private piece: Piece = new NullPiece();
 
-  public setPiece(piece: Piece | null): void {
+  public setPiece(piece: Piece): void {
     this.piece = piece;
   }
-  public getPiece(): Piece | null {
+  public getPiece(): Piece {
     return this.piece;
   }
 }

@@ -5,4 +5,15 @@ export class Bishop extends Piece {
   constructor(color: PieceColor) {
     super(color, PieceType.BISHOP);
   }
+
+  public toString(): string {
+    switch (this.color) {
+      case PieceColor.WHITE:
+        return "B";
+      case PieceColor.BLACK:
+        return "b";
+      default:
+        throw new Error("Invalid color");
+    }
+  }
 }
