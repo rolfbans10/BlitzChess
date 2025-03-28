@@ -21,7 +21,7 @@ export interface Piece {
   color: PieceColor;
   type: PieceType;
   pos: Position;
-  captured: boolean;
+  captured?: boolean;
   hasMoved?: boolean;
   moves?: Move[];
 }
@@ -358,6 +358,24 @@ export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
 
 export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
   return [];
+};
+
+export const getPieceString = (piece: Piece | null): string => {
+  if (!piece) {
+    return " ";
+  }
+  const stringMap = {
+    [PieceType.PAWN]: "P",
+    [PieceType.ROOK]: "R",
+    [PieceType.KNIGHT]: "N",
+    [PieceType.BISHOP]: "B",
+    [PieceType.QUEEN]: "Q",
+    [PieceType.KING]: "K",
+  };
+
+  return piece?.color === PieceColor.WHITE
+    ? stringMap[piece.type].toUpperCase()
+    : stringMap[piece.type].toLowerCase();
 };
 
 export const createNewChessGame = (

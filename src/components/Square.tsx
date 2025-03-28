@@ -1,5 +1,5 @@
 import react, { JSX } from "react";
-import { Square as ChessSquare } from "@/engine/square";
+import { getPieceString, Square as ChessSquare } from "@/engine/chess";
 
 export interface SquareProps {
   square: ChessSquare;
@@ -14,7 +14,7 @@ export const Square = ({ square }: SquareProps): JSX.Element => {
         border: "1px dashed white",
       }}
     >
-      {square.getPiece()?.toString()}
+      {getPieceString(square.piece)}
     </div>
   );
 };

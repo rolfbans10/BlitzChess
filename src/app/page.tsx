@@ -1,24 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Square as ChessSquare } from "@/engine/square";
-import { ChessGame } from "@/engine/chess-game";
-import { Player } from "@/engine/player";
-import { PieceColor } from "@/engine/types";
+import { useState } from "react";
 import { Square } from "@/components/Square";
+import {
+  ChessGame,
+  createNewChessGame,
+  PieceColor,
+  Player,
+} from "@/engine/chess";
 
-const chessGame = new ChessGame();
-chessGame.initGame(
-  new Player("Player 1", PieceColor.WHITE),
-  new Player("Player 2", PieceColor.BLACK),
-);
+const player1: Player = {
+  name: "Player One",
+  color: PieceColor.WHITE,
+};
+
+const player2: Player = {
+  name: "Player Two",
+  color: PieceColor.BLACK,
+};
 
 export default function Home() {
-  const [board, setBoard] = useState<ChessSquare[][]>();
+  const [game, setGame] = useState<ChessGame>(() =>
+    createNewChessGame(player1, player2),
+  );
 
-  useEffect(() => {
-    setBoard(chessGame.getChessBoard());
-  }, []);
+  const { board } = game;
 
   return (
     <div className="flex flex-col items-center justify-center h-screen bg-gray-900 text-white">
