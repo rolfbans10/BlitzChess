@@ -22,6 +22,8 @@ export interface Piece {
   type: PieceType;
   pos: Position;
   captured: boolean;
+  hasMoved?: boolean;
+  moves?: Move[];
 }
 
 export interface Square {
@@ -37,6 +39,14 @@ export interface ChessGame {
   board: Square[][];
   player1: Player;
   player2: Player;
+  toPlay: PieceColor;
+  winner: PieceColor | null;
+  moves: Move[];
+}
+
+export interface Move {
+  from: Position;
+  to: Position;
 }
 
 export const getCleanBoard = (): Square[][] => {
@@ -237,8 +247,141 @@ export const setupInitialPositions = (): Square[][] => {
   return board;
 };
 
-// export const initChessGame = (): ChessGame => {
-//   const board: Square[] = [];
-//
-//   return board;
-// };
+export const getPieceMoves = (game: ChessGame, piece: Piece): Move[] => {
+  switch (piece.type) {
+    case PieceType.PAWN:
+      return getPawnMoves(game, piece);
+    case PieceType.ROOK:
+      return getRookMoves(game, piece);
+    case PieceType.KNIGHT:
+      return getKnightMoves(game, piece);
+    case PieceType.BISHOP:
+      return getBishopMoves(game, piece);
+    case PieceType.QUEEN:
+      return getQueenMoves(game, piece);
+    case PieceType.KING:
+      return getKingMoves(game, piece);
+    default:
+      return [];
+  }
+};
+
+export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
+  if (pawn.color !== game.toPlay) {
+    return [];
+  }
+  let offsets: Position[] = [];
+  if (pawn.color === PieceColor.WHITE) {
+    offsets = [
+      {
+        x: 1,
+        y: 0,
+      },
+      {
+        x: 2,
+        y: 0,
+      },
+      {
+        x: 1,
+        y: 1,
+      },
+      {
+        x: 1,
+        y: -1,
+      },
+    ];
+  } else {
+    offsets = [
+      {
+        x: -1,
+        y: 0,
+      },
+      {
+        x: -2,
+        y: 0,
+      },
+      {
+        x: -1,
+        y: 1,
+      },
+      {
+        x: -1,
+        y: -1,
+      },
+    ];
+  }
+
+  const possibleMoves: Move[] = [];
+  for (const offset of offsets) {
+    const to = {
+      x: pawn.pos.x + offset.x,
+      y: pawn.pos.y + offset.y,
+    };
+    if (to.x < 0 || to.x > 7 || to.y < 0 || to.y > 7) {
+      continue;
+    }
+    if (pawn.hasMoved && offset.x === 2) {
+      continue;
+    }
+    const square = game.board[to.x][to.y];
+    if (square.piece) {
+      if (square.piece.color === PieceColor.WHITE) {
+        continue;
+      }
+      if (square.piece.color === PieceColor.BLACK && offset.y === 0) {
+        continue;
+      }
+    }
+    possibleMoves.push({
+      from: pawn.pos,
+      to,
+    });
+  }
+  return possibleMoves;
+};
+
+export const getRookMoves = (game: ChessGame, rook: Piece): Move[] => {
+  return [];
+};
+
+export const getKnightMoves = (game: ChessGame, knight: Piece): Move[] => {
+  return [];
+};
+
+export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
+  return [];
+};
+
+export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
+  return [];
+};
+
+export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
+  return [];
+};
+
+export const createNewChessGame = (
+  player1: Player,
+  player2: Player,
+): ChessGame => {
+  const game: ChessGame = {
+    board: setupInitialPositions(),
+    player1,
+    player2,
+    toPlay: PieceColor.WHITE,
+    winner: null,
+    moves: [],
+  };
+
+  // calculate possible moves for each piece
+  for (let x = 0; x < 8; x++) {
+    for (let y = 0; y < 8; y++) {
+      const piece = game.board[x][y].piece;
+      if (piece) {
+        piece.moves = getPieceMoves(game, piece);
+      }
+    }
+  }
+
+  return game;
+};

@@ -191,4 +191,7 @@ describe("chess", () => {
       }
     });
   });
+  describe("getPawnMoves()", () => {
+    //
+  });
 });
