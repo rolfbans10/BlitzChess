@@ -341,7 +341,67 @@ export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
 };
 
 export const getRookMoves = (game: ChessGame, rook: Piece): Move[] => {
-  return [];
+  if (rook.color !== game.toPlay) {
+    return [];
+  }
+
+  const { x, y } = rook.pos;
+  const possibleMoves: Move[] = [];
+  // got each direction
+  // up
+  for (let h = x + 1; h < 8; h++) {
+    if (
+      game.board[h][y].piece &&
+      game.board[h][y].piece?.color === rook.color
+    ) {
+      break;
+    }
+    possibleMoves.push({
+      from: rook.pos,
+      to: { x: h, y },
+    });
+  }
+  // down
+  for (let h = x - 1; h >= 0; h--) {
+    if (
+      game.board[h][y].piece &&
+      game.board[h][y].piece?.color === rook.color
+    ) {
+      break;
+    }
+    possibleMoves.push({
+      from: rook.pos,
+      to: { x: h, y },
+    });
+  }
+  // right
+  for (let v = y + 1; v < 8; v++) {
+    if (
+      game.board[x][v].piece &&
+      game.board[x][v].piece?.color === rook.color
+    ) {
+      break;
+    }
+    possibleMoves.push({
+      from: rook.pos,
+      to: { x, y: v },
+    });
+  }
+  // left
+  for (let v = y - 1; v >= 0; v--) {
+    if (
+      game.board[x][v].piece &&
+      game.board[x][v].piece?.color === rook.color
+    ) {
+      break;
+    }
+    possibleMoves.push({
+      from: rook.pos,
+      to: { x, y: v },
+    });
+  }
+
+  return possibleMoves;
 };
 
 export const getKnightMoves = (game: ChessGame, knight: Piece): Move[] => {
