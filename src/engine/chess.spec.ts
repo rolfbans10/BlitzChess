@@ -1,5 +1,7 @@
 import {
+  ChessGame,
   getCleanBoard,
+  getPawnMoves,
   getPieceString,
   Piece,
   PieceColor,
@@ -261,7 +263,153 @@ describe("chess", () => {
       });
     });
   });
-  describe("getPawnMoves()", () => {
-    //
+  describe("getPawnMoves", () => {
+    const createTestGame = (): ChessGame => ({
+      board: getCleanBoard(),
+      toPlay: PieceColor.WHITE,
+      player1: {
+        name: "player 1",
+        color: PieceColor.WHITE,
+      },
+      player2: {
+        name: "player 2",
+        color: PieceColor.BLACK,
+      },
+      winner: null,
+      moves: [],
+    });
+
+    it("should return one square forward for a white pawn with an empty square ahead", () => {
+      const game = createTestGame();
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = pawn;
+
+      const moves = getPawnMoves(game, pawn);
+      console.log("moves", moves);
+      expect(moves).toEqual([{ from: { x: 4, y: 4 }, to: { x: 5, y: 4 } }]);
+    });
+
+    it("should return two squares forward for a white pawn on its initial position", () => {
+      const game = createTestGame();
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 1, y: 4 },
+      };
+
+      game.board[1][4].piece = pawn;
+
+      const moves = getPawnMoves(game, pawn);
+      expect(moves).toEqual([
+        { from: { x: 1, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 1, y: 4 }, to: { x: 3, y: 4 } },
+      ]);
+    });
+
+    it("should return one square forward for a black pawn", () => {
+      const game = createTestGame();
+      game.toPlay = PieceColor.BLACK; // Black's turn
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = pawn;
+
+      const moves = getPawnMoves(game, pawn);
+      expect(moves).toEqual([{ from: { x: 4, y: 4 }, to: { x: 3, y: 4 } }]);
+    });
+
+    it("should return diagonal capture moves for a white pawn", () => {
+      const game = createTestGame();
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = pawn;
+      game.board[5][3].piece = {
+        type: PieceType.BISHOP,
+        color: PieceColor.BLACK,
+        pos: { x: 5, y: 3 },
+        hasMoved: false,
+      };
+      game.board[5][5].piece = {
+        type: PieceType.KNIGHT,
+        color: PieceColor.BLACK,
+        pos: { x: 5, y: 5 },
+        hasMoved: false,
+      };
+
+      const moves = getPawnMoves(game, pawn);
+      expect(moves).toEqual([
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+      ]);
+    });
+
+    it("should not allow forward movement if the square is occupied", () => {
+      const game = createTestGame();
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = pawn;
+      game.board[5][4].piece = {
+        type: PieceType.ROOK,
+        color: PieceColor.BLACK,
+        pos: { x: 5, y: 4 },
+        hasMoved: false,
+      };
+
+      const moves = getPawnMoves(game, pawn);
+      expect(moves).toEqual([]); // No valid moves
+    });
+
+    it("should handle promotion for a pawn reaching the last rank", () => {
+      const game = createTestGame();
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 6, y: 4 },
+      };
+
+      game.board[6][4].piece = pawn;
+
+      const moves = getPawnMoves(game, pawn);
+      expect(moves).toEqual([{ from: { x: 6, y: 4 }, to: { x: 7, y: 4 } }]); // Promotion logic might go here
+    });
+
+    it("should prevent white pawn movement or capture if not white's turn", () => {
+      const game = createTestGame();
+      game.toPlay = PieceColor.BLACK; // Black's turn
+      const pawn: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = pawn;
+
+      const moves = getPawnMoves(game, pawn);
+      expect(moves).toEqual([]); // Pawn cannot move out of turn
+    });
   });
 });
