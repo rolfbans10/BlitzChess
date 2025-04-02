@@ -328,67 +328,65 @@ export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
   return possibleMoves;
 };
 
+export const getLinearMoves = (
+  game: ChessGame,
+  piece: Piece,
+  directions: Position[],
+): Move[] => {
+  const possibleMoves: Move[] = [];
+  for (const direction of directions) {
+    console.log("direction", direction);
+    let to = {
+      x: piece.pos.x + direction.x,
+      y: piece.pos.y + direction.y,
+    };
+    let directionBlocked = false;
+    while (isPositionInsideBoard(to) && !directionBlocked) {
+      console.log("to", to);
+      const square = game.board[to.x][to.y];
+      console.log("square.piece", square.piece);
+      if (square.piece && square.piece.color === piece.color) {
+        directionBlocked = true;
+        console.log("directionBlocked piece same color", directionBlocked);
+        break;
+      }
+      if (square.piece && square.piece.color !== piece.color) {
+        possibleMoves.push({
+          from: piece.pos,
+          to,
+        });
+        directionBlocked = true;
+        console.log("directionBlocked piece capture", directionBlocked);
+        break;
+      }
+      console.log("blank square", directionBlocked);
+      possibleMoves.push({
+        from: piece.pos,
+        to,
+      });
+      to = {
+        x: to.x + direction.x,
+        y: to.y + direction.y,
+      };
+      console.log("new  to", to);
+    }
+  }
+  return possibleMoves;
+};
+
 export const getRookMoves = (game: ChessGame, rook: Piece): Move[] => {
   if (rook.color !== game.toPlay) {
     return [];
   }
 
-  const { x, y } = rook.pos;
   const possibleMoves: Move[] = [];
-  // got each direction
-  // up
-  for (let h = x + 1; h < 8; h++) {
-    if (
-      game.board[h][y].piece &&
-      game.board[h][y].piece?.color === rook.color
-    ) {
-      break;
-    }
-    possibleMoves.push({
-      from: rook.pos,
-      to: { x: h, y },
-    });
-  }
-  // down
-  for (let h = x - 1; h >= 0; h--) {
-    if (
-      game.board[h][y].piece &&
-      game.board[h][y].piece?.color === rook.color
-    ) {
-      break;
-    }
-    possibleMoves.push({
-      from: rook.pos,
-      to: { x: h, y },
-    });
-  }
-  // right
-  for (let v = y + 1; v < 8; v++) {
-    if (
-      game.board[x][v].piece &&
-      game.board[x][v].piece?.color === rook.color
-    ) {
-      break;
-    }
-    possibleMoves.push({
-      from: rook.pos,
-      to: { x, y: v },
-    });
-  }
-  // left
-  for (let v = y - 1; v >= 0; v--) {
-    if (
-      game.board[x][v].piece &&
-      game.board[x][v].piece?.color === rook.color
-    ) {
-      break;
-    }
-    possibleMoves.push({
-      from: rook.pos,
-      to: { x, y: v },
-    });
-  }
-
+  const directions: Position[] = [
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    { x: 1, y: 0 },
+    { x: -1, y: 0 },
+  ];
+  possibleMoves.push(...getLinearMoves(game, rook, directions));
   return possibleMoves;
 };
 

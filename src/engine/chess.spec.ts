@@ -3,12 +3,30 @@ import {
   getCleanBoard,
   getPawnMoves,
   getPieceString,
+  getRookMoves,
   Piece,
   PieceColor,
   PieceType,
   setupInitialPositions,
   Square,
 } from "@/engine/chess";
+
+const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
+  board: getCleanBoard(),
+  toPlay: PieceColor.WHITE,
+  player1: {
+    name: "player 1",
+    color: PieceColor.WHITE,
+  },
+  player2: {
+    name: "player 2",
+    color: PieceColor.BLACK,
+  },
+  winner: null,
+  moves: [],
+
+  ...overrides,
+});
 
 describe("chess", () => {
   describe("getCleanBoard()", () => {
@@ -264,21 +282,6 @@ describe("chess", () => {
     });
   });
   describe("getPawnMoves", () => {
-    const createTestGame = (): ChessGame => ({
-      board: getCleanBoard(),
-      toPlay: PieceColor.WHITE,
-      player1: {
-        name: "player 1",
-        color: PieceColor.WHITE,
-      },
-      player2: {
-        name: "player 2",
-        color: PieceColor.BLACK,
-      },
-      winner: null,
-      moves: [],
-    });
-
     it("should return one square forward for a white pawn with an empty square ahead", () => {
       const game = createTestGame();
       const pawn: Piece = {
@@ -291,7 +294,6 @@ describe("chess", () => {
       game.board[4][4].piece = pawn;
 
       const moves = getPawnMoves(game, pawn);
-      console.log("moves", moves);
       expect(moves).toEqual([{ from: { x: 4, y: 4 }, to: { x: 5, y: 4 } }]);
     });
 
@@ -410,6 +412,175 @@ describe("chess", () => {
 
       const moves = getPawnMoves(game, pawn);
       expect(moves).toEqual([]); // Pawn cannot move out of turn
+    });
+  });
+  describe("getRookMoves", () => {
+    it("should return all horizontal and vertical moves for an unblocked rook at the center", () => {
+      const game = createTestGame();
+      const rook: Piece = {
+        type: PieceType.ROOK,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = rook;
+
+      const moves = getRookMoves(game, rook);
+
+      const expectedMoves = [
+        // Horizontal moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        // Vertical moves
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
+      ];
+
+      expect(moves).toEqual(expectedMoves);
+    });
+
+    it("should stop at squares occupied by pieces of the same color", () => {
+      const game = createTestGame();
+      const rook: Piece = {
+        type: PieceType.ROOK,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = rook;
+      game.board[4][6].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 6 },
+      };
+      game.board[6][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 6, y: 4 },
+      };
+
+      const moves = getRookMoves(game, rook);
+      console.log(moves);
+
+      const expectedMoves = [
+        // Horizontal moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        // Vertical moves
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
+      ];
+
+      expect(moves).toEqual(expectedMoves);
+    });
+
+    it("should include capture moves for opposite-colored pieces", () => {
+      const game = createTestGame();
+      const rook: Piece = {
+        type: PieceType.ROOK,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = rook;
+      game.board[4][6].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 4, y: 6 },
+      };
+      game.board[6][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 6, y: 4 },
+      };
+
+      const moves = getRookMoves(game, rook);
+
+      const expectedMoves = [
+        // Horizontal moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 6 } }, // Capture
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        // Vertical moves
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 4 } }, // Capture
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
+      ];
+
+      expect(moves).toEqual(expectedMoves);
+    });
+
+    it("should not allow moving through other pieces", () => {
+      const game = createTestGame();
+      const rook: Piece = {
+        type: PieceType.ROOK,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = rook;
+      game.board[4][6].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 6 },
+      };
+      game.board[6][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 6, y: 4 },
+      };
+
+      const moves = getRookMoves(game, rook);
+      console.log(moves);
+
+      const expectedMoves = [
+        // Horizontal moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        // Vertical moves
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
+      ];
+
+      expect(moves).toEqual(expectedMoves);
     });
   });
 });
