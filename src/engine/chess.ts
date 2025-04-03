@@ -335,19 +335,15 @@ export const getLinearMoves = (
 ): Move[] => {
   const possibleMoves: Move[] = [];
   for (const direction of directions) {
-    console.log("direction", direction);
     let to = {
       x: piece.pos.x + direction.x,
       y: piece.pos.y + direction.y,
     };
     let directionBlocked = false;
     while (isPositionInsideBoard(to) && !directionBlocked) {
-      console.log("to", to);
       const square = game.board[to.x][to.y];
-      console.log("square.piece", square.piece);
       if (square.piece && square.piece.color === piece.color) {
         directionBlocked = true;
-        console.log("directionBlocked piece same color", directionBlocked);
         break;
       }
       if (square.piece && square.piece.color !== piece.color) {
@@ -356,10 +352,8 @@ export const getLinearMoves = (
           to,
         });
         directionBlocked = true;
-        console.log("directionBlocked piece capture", directionBlocked);
         break;
       }
-      console.log("blank square", directionBlocked);
       possibleMoves.push({
         from: piece.pos,
         to,
@@ -368,7 +362,6 @@ export const getLinearMoves = (
         x: to.x + direction.x,
         y: to.y + direction.y,
       };
-      console.log("new  to", to);
     }
   }
   return possibleMoves;
@@ -428,7 +421,18 @@ export const getKnightMoves = (game: ChessGame, knight: Piece): Move[] => {
 };
 
 export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
-  return [];
+  if (bishop.color !== game.toPlay) {
+    return [];
+  }
+  const possibleMoves: Move[] = [];
+  const directions: Position[] = [
+    { x: 1, y: 1 },
+    { x: -1, y: 1 },
+    { x: 1, y: -1 },
+    { x: -1, y: -1 },
+  ];
+  possibleMoves.push(...getLinearMoves(game, bishop, directions));
+  return possibleMoves;
 };
 
 export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
