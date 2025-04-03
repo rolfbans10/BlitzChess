@@ -455,7 +455,38 @@ export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
 };
 
 export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
-  return [];
+  if (king.color !== game.toPlay) {
+    return [];
+  }
+  const possibleMoves: Move[] = [];
+  const steps: Position[] = [
+    { x: 1, y: 0 },
+    { x: 1, y: 1 },
+    { x: 1, y: -1 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    { x: -1, y: 0 },
+    { x: -1, y: 1 },
+    { x: -1, y: -1 },
+  ];
+  for (const step of steps) {
+    let to = {
+      x: king.pos.x + step.x,
+      y: king.pos.y + step.y,
+    };
+    if (!isPositionInsideBoard(to)) {
+      continue;
+    }
+    const square = game.board[to.x][to.y];
+    if (square.piece && square.piece.color === king.color) {
+      continue;
+    }
+    possibleMoves.push({
+      from: king.pos,
+      to,
+    });
+  }
+  return possibleMoves;
 };
 
 export const getPieceString = (piece: Piece | null): string => {

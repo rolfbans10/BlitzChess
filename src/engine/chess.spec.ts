@@ -2,6 +2,7 @@ import {
   ChessGame,
   getBishopMoves,
   getCleanBoard,
+  getKingMoves,
   getKnightMoves,
   getPawnMoves,
   getPieceString,
@@ -1105,6 +1106,130 @@ describe("chess", () => {
       expect(extraMoves.length).toBe(0);
       expect(moves).toEqual(expect.arrayContaining(expectedMoves));
       expect(moves.length).toBe(expectedMoves.length);
+    });
+  });
+  describe("getKnightMoves", () => {
+    it("should return all valid moves for a king in the center of the board", () => {
+      const game = createTestGame();
+
+      const king: Piece = {
+        type: PieceType.KING,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = king;
+
+      const moves = getKingMoves(game, king);
+
+      const expectedMoves = [
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should not move outside the board near the top-left corner", () => {
+      const game = createTestGame();
+
+      const king: Piece = {
+        type: PieceType.KING,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 0, y: 0 },
+      };
+
+      game.board[0][0].piece = king;
+
+      const moves = getKingMoves(game, king);
+
+      const expectedMoves = [
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 1 } },
+        { from: { x: 0, y: 0 }, to: { x: 1, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 1, y: 1 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should stop at friendly pieces and not capture them", () => {
+      const game = createTestGame();
+
+      const king: Piece = {
+        type: PieceType.KING,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const friendlyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 5 },
+      };
+
+      game.board[4][4].piece = king;
+      game.board[4][5].piece = friendlyPiece;
+
+      const moves = getKingMoves(game, king);
+
+      const expectedMoves = [
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+      ]; // Excluding x:4, y:5 because of friendly piece
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should capture an opponent piece", () => {
+      const game = createTestGame();
+
+      const king: Piece = {
+        type: PieceType.KING,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const enemyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 4, y: 5 },
+      };
+
+      game.board[4][4].piece = king;
+      game.board[4][5].piece = enemyPiece;
+
+      const moves = getKingMoves(game, king);
+
+      const expectedMoves = [
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } }, // Capturing enemy piece
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
     });
   });
 });
