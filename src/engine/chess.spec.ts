@@ -7,6 +7,7 @@ import {
   getPieceString,
   getQueenMoves,
   getRookMoves,
+  Move,
   Piece,
   PieceColor,
   PieceType,
@@ -30,6 +31,27 @@ const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
 
   ...overrides,
 });
+
+const findExtraMoves = (moves: Move[], expectedMoves: Move[]): Move[] => {
+  const extraMoves: Move[] = [];
+  for (const move of moves) {
+    let found = false;
+    for (const expectedMove of expectedMoves) {
+      if (
+        move.from.x === expectedMove.from.x &&
+        move.from.y === expectedMove.from.y &&
+        move.to.x === expectedMove.to.x &&
+        move.to.y === expectedMove.to.y
+      ) {
+        found = true;
+      }
+    }
+    if (!found) {
+      extraMoves.push(move);
+    }
+  }
+  return extraMoves;
+};
 
 describe("chess", () => {
   describe("getCleanBoard", () => {
@@ -992,6 +1014,10 @@ describe("chess", () => {
       const expectedMoves = [
         // Vertical moves (up to but not including friendly piece at x:6)
         { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
         // Horizontal moves
         { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
         { from: { x: 4, y: 4 }, to: { x: 4, y: 6 } },
@@ -1016,8 +1042,10 @@ describe("chess", () => {
         { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
       ];
 
-      expect(moves.length).toBe(expectedMoves.length);
+      const extraMoves = findExtraMoves(moves, expectedMoves);
+      expect(extraMoves.length).toBe(0);
       expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+      expect(moves.length).toBe(expectedMoves.length);
     });
     it("should allow capturing an opponent piece and stop after the capture", () => {
       const game = createTestGame();
@@ -1064,8 +1092,17 @@ describe("chess", () => {
         { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
         { from: { x: 4, y: 4 }, to: { x: 6, y: 4 } },
         { from: { x: 4, y: 4 }, to: { x: 7, y: 4 } },
+        // extra
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
       ];
-
+      const extraMoves = findExtraMoves(moves, expectedMoves);
+      expect(extraMoves.length).toBe(0);
       expect(moves).toEqual(expect.arrayContaining(expectedMoves));
       expect(moves.length).toBe(expectedMoves.length);
     });
