@@ -436,7 +436,22 @@ export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
 };
 
 export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
-  return [];
+  if (queen.color !== game.toPlay) {
+    return [];
+  }
+  const possibleMoves: Move[] = [];
+  const directions: Position[] = [
+    { x: 1, y: 0 },
+    { x: 1, y: 1 },
+    { x: 1, y: -1 },
+    { x: 0, y: 1 },
+    { x: 0, y: -1 },
+    { x: -1, y: 0 },
+    { x: -1, y: 1 },
+    { x: -1, y: -1 },
+  ];
+  possibleMoves.push(...getLinearMoves(game, queen, directions));
+  return possibleMoves;
 };
 
 export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {

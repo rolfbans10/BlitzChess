@@ -1,8 +1,11 @@
 import {
   ChessGame,
+  getBishopMoves,
   getCleanBoard,
+  getKnightMoves,
   getPawnMoves,
   getPieceString,
+  getQueenMoves,
   getRookMoves,
   Piece,
   PieceColor,
@@ -589,6 +592,482 @@ describe("chess", () => {
         { from: { x: 4, y: 4 }, to: { x: 6, y: 4 } }, // capture
       ];
       expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+  });
+  describe("getKnightMoves", () => {
+    it("should return all possible moves for a knight", () => {
+      const game = createTestGame();
+      const knight: Piece = {
+        type: PieceType.KNIGHT,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+      game.board[4][4].piece = knight;
+      const moves = getKnightMoves(game, knight);
+      const expectedMoves = [
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 2 } },
+      ];
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should not move outside the board from the corner", () => {
+      const game = createTestGame();
+
+      const knight: Piece = {
+        type: PieceType.KNIGHT,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 0, y: 0 },
+      };
+
+      game.board[0][0].piece = knight;
+
+      const moves = getKnightMoves(game, knight);
+
+      const expectedMoves = [
+        { from: { x: 0, y: 0 }, to: { x: 2, y: 1 } },
+        { from: { x: 0, y: 0 }, to: { x: 1, y: 2 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+
+    it("should block movement to squares occupied by same-colored pieces", () => {
+      const game = createTestGame();
+
+      const knight: Piece = {
+        type: PieceType.KNIGHT,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const friendlyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 6, y: 5 },
+      };
+
+      game.board[4][4].piece = knight;
+      game.board[6][5].piece = friendlyPiece;
+
+      const moves = getKnightMoves(game, knight);
+
+      const expectedMoves = [
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 2 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should allow captures of opponent pieces", () => {
+      const game = createTestGame();
+
+      const knight: Piece = {
+        type: PieceType.KNIGHT,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const enemyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 6, y: 5 },
+      };
+
+      game.board[4][4].piece = knight;
+      game.board[6][5].piece = enemyPiece;
+
+      const moves = getKnightMoves(game, knight);
+
+      const expectedMoves = [
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 5 } }, // Capture move
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 2 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+  });
+  describe("getBishopMoves", () => {
+    it("should return all valid diagonal moves from the center of the board", () => {
+      const game = createTestGame();
+
+      const bishop: Piece = {
+        type: PieceType.BISHOP,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = bishop;
+
+      const moves = getBishopMoves(game, bishop);
+
+      const expectedMoves = [
+        // Top-right diagonal
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 7 } },
+        // Bottom-right diagonal
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 7 } },
+        // Bottom-left diagonal
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 0 } },
+        // Top-left diagonal
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+
+    it("should not move outside the board when near a corner", () => {
+      const game = createTestGame();
+
+      const bishop: Piece = {
+        type: PieceType.BISHOP,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 0, y: 0 },
+      };
+
+      game.board[0][0].piece = bishop;
+
+      const moves = getBishopMoves(game, bishop);
+
+      const expectedMoves = [
+        { from: { x: 0, y: 0 }, to: { x: 1, y: 1 } },
+        { from: { x: 0, y: 0 }, to: { x: 2, y: 2 } },
+        { from: { x: 0, y: 0 }, to: { x: 3, y: 3 } },
+        { from: { x: 0, y: 0 }, to: { x: 4, y: 4 } },
+        { from: { x: 0, y: 0 }, to: { x: 5, y: 5 } },
+        { from: { x: 0, y: 0 }, to: { x: 6, y: 6 } },
+        { from: { x: 0, y: 0 }, to: { x: 7, y: 7 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+
+    it("should stop movement at a friendly piece", () => {
+      const game = createTestGame();
+
+      const bishop: Piece = {
+        type: PieceType.BISHOP,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const friendlyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 6, y: 6 },
+      };
+
+      game.board[4][4].piece = bishop;
+      game.board[6][6].piece = friendlyPiece;
+
+      const moves = getBishopMoves(game, bishop);
+
+      const expectedMoves = [
+        // Top-right diagonal
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        // Bottom-right diagonal
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 7 } },
+        // Bottom-left diagonal
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 0 } },
+        // Top-left diagonal
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+
+    it("should allow capturing an opponent and stop after the captured piece", () => {
+      const game = createTestGame();
+
+      const bishop: Piece = {
+        type: PieceType.BISHOP,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const enemyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 6, y: 6 },
+      };
+
+      game.board[4][4].piece = bishop;
+      game.board[6][6].piece = enemyPiece;
+
+      const moves = getBishopMoves(game, bishop);
+
+      const expectedMoves = [
+        // Top-right diagonal (up-to and including capture)
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 6 } }, // Capture move
+        // Bottom-right diagonal
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 7 } },
+        // Bottom-left diagonal
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 0 } },
+        // Top-left diagonal
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+  });
+  describe("getQueenMoves", () => {
+    it("should return all valid moves from the center of the board", () => {
+      const game = createTestGame();
+
+      const queen: Piece = {
+        type: PieceType.QUEEN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[4][4].piece = queen;
+
+      const moves = getQueenMoves(game, queen);
+
+      const expectedMoves = [
+        // Horizontal moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        // Vertical moves
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 4 } },
+        // Diagonal top-right
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 7 } },
+        // Diagonal bottom-right
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 7 } },
+        // Diagonal bottom-left
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 0 } },
+        // Diagonal top-left
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+
+    it("should not move outside the board near corners", () => {
+      const game = createTestGame();
+
+      const queen: Piece = {
+        type: PieceType.QUEEN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 0, y: 0 },
+      };
+
+      game.board[0][0].piece = queen;
+
+      const moves = getQueenMoves(game, queen);
+
+      const expectedMoves = [
+        // Horizontal moves
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 1 } },
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 2 } },
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 3 } },
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 4 } },
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 5 } },
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 6 } },
+        { from: { x: 0, y: 0 }, to: { x: 0, y: 7 } },
+        // Vertical moves
+        { from: { x: 0, y: 0 }, to: { x: 1, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 2, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 3, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 4, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 5, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 6, y: 0 } },
+        { from: { x: 0, y: 0 }, to: { x: 7, y: 0 } },
+        // Diagonal moves
+        { from: { x: 0, y: 0 }, to: { x: 1, y: 1 } },
+        { from: { x: 0, y: 0 }, to: { x: 2, y: 2 } },
+        { from: { x: 0, y: 0 }, to: { x: 3, y: 3 } },
+        { from: { x: 0, y: 0 }, to: { x: 4, y: 4 } },
+        { from: { x: 0, y: 0 }, to: { x: 5, y: 5 } },
+        { from: { x: 0, y: 0 }, to: { x: 6, y: 6 } },
+        { from: { x: 0, y: 0 }, to: { x: 7, y: 7 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should stop at friendly pieces and not move past them", () => {
+      const game = createTestGame();
+
+      const queen: Piece = {
+        type: PieceType.QUEEN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const friendlyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 6, y: 4 },
+      };
+
+      game.board[4][4].piece = queen;
+      game.board[6][4].piece = friendlyPiece;
+
+      const moves = getQueenMoves(game, queen);
+
+      const expectedMoves = [
+        // Vertical moves (up to but not including friendly piece at x:6)
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        // Horizontal moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        // Diagonal moves
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 0 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 1 } },
+      ];
+
+      expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+    it("should allow capturing an opponent piece and stop after the capture", () => {
+      const game = createTestGame();
+
+      const queen: Piece = {
+        type: PieceType.QUEEN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 4, y: 4 },
+      };
+
+      const enemyPiece: Piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: false,
+        pos: { x: 6, y: 6 },
+      };
+
+      game.board[4][4].piece = queen;
+      game.board[6][6].piece = enemyPiece;
+
+      const moves = getQueenMoves(game, queen);
+
+      const expectedMoves = [
+        // Diagonal moves toward the enemy piece (stopping at the enemy piece)
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 6 } }, // Capture move
+        // Other diagonal moves
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 3, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 2, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 1, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 0, y: 0 } },
+        // Horizontal and vertical moves
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 5 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 6 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 7 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 3 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 2 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 1 } },
+        { from: { x: 4, y: 4 }, to: { x: 4, y: 0 } },
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 6, y: 4 } },
+        { from: { x: 4, y: 4 }, to: { x: 7, y: 4 } },
+      ];
+
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+      expect(moves.length).toBe(expectedMoves.length);
     });
   });
 });
