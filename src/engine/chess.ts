@@ -507,6 +507,51 @@ export const getPieceString = (piece: Piece | null): string => {
     : stringMap[piece.type].toLowerCase();
 };
 
+export const getAllPossibleMoves = (chessGame: ChessGame): Move[] => {
+  const toPlay = chessGame.toPlay;
+  const piecesToPlay: Piece[] = [];
+  for (let x = 0; x < 8; x++) {
+    for (let y = 0; y < 8; y++) {
+      const piece = chessGame.board[x][y].piece;
+      if (piece && piece.color === toPlay) {
+        piecesToPlay.push(piece);
+      }
+    }
+  }
+  const moves: Move[] = [];
+  for (const piece of piecesToPlay) {
+    if (!piece) {
+      continue;
+    }
+    moves.push(...getPieceMoves(chessGame, piece));
+  }
+  return moves;
+};
+
+const filterMovesUsingChessRules = (
+  chessGame: ChessGame,
+  moves: Move[],
+  piece: Piece,
+) => {
+  /**
+   * Check
+   * Checkmate
+   * Stalemate
+   * Castling
+   * En Passant
+   * Pawn Promotion
+   * Underpromotion
+   * Draw by Threefold Repetition
+   * Draw by the Fifty-Move Rule
+   * Draw by Insufficient Mating Material
+   * Draw by Agreement
+   * Draw by Perpetual Check
+   * Touch-Move Rule
+   * Losing on Time
+   * Illegal Move Rule
+   */
+};
+
 export const createNewChessGame = (
   player1: Player,
   player2: Player,

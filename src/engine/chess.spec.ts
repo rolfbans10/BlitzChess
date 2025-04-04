@@ -1,5 +1,6 @@
 import {
   ChessGame,
+  getAllPossibleMoves,
   getBishopMoves,
   getCleanBoard,
   getKingMoves,
@@ -1229,6 +1230,97 @@ describe("chess", () => {
       ];
 
       expect(moves.length).toBe(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+  });
+  describe("getAllPossibleMoves", () => {
+    it("should return no moves if the player has no pieces left", () => {
+      const game = createTestGame();
+
+      const moves = getAllPossibleMoves(game);
+
+      expect(moves).toHaveLength(0);
+    });
+    it("should return all possible moves for a piece", () => {
+      const game = createTestGame();
+
+      game.board[4][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      const moves = getAllPossibleMoves(game);
+      const expectedMoves: Move[] = [
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
+      ];
+
+      expect(moves).toHaveLength(expectedMoves.length);
+      expect(moves).toEqual(expect.arrayContaining(expectedMoves));
+    });
+
+    it("should no moves if the piece is blocked", () => {
+      const game = createTestGame();
+
+      game.board[4][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+
+      game.board[5][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: true,
+        pos: { x: 5, y: 4 },
+      };
+
+      const moves = getAllPossibleMoves(game);
+
+      expect(moves).toHaveLength(0);
+    });
+    it("should return all possible moves for multiple pieces", () => {
+      const game = createTestGame();
+
+      game.board[4][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: true,
+        pos: { x: 4, y: 4 },
+      };
+      game.board[1][0].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.WHITE,
+        hasMoved: false,
+        pos: { x: 1, y: 0 },
+      };
+
+      game.board[5][4].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: true,
+        pos: { x: 5, y: 4 },
+      };
+      // available for capture
+      game.board[5][5].piece = {
+        type: PieceType.PAWN,
+        color: PieceColor.BLACK,
+        hasMoved: true,
+        pos: { x: 5, y: 5 },
+      };
+
+      const moves = getAllPossibleMoves(game);
+      const expectedMoves: Move[] = [
+        // capture move
+        { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
+        // other pawn
+        { from: { x: 1, y: 0 }, to: { x: 2, y: 0 } },
+        { from: { x: 1, y: 0 }, to: { x: 3, y: 0 } },
+      ];
+
+      expect(moves).toHaveLength(expectedMoves.length);
       expect(moves).toEqual(expect.arrayContaining(expectedMoves));
     });
   });
