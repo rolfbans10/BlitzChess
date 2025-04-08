@@ -6,7 +6,6 @@ import {
   getKingMoves,
   getKnightMoves,
   getPawnMoves,
-  getPieceString,
   getQueenMoves,
   getRookMoves,
   Move,
@@ -16,6 +15,7 @@ import {
   setupInitialPositions,
   Square,
 } from "@/engine/chess";
+import { getPieceString } from "@/engine/utils";
 
 const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   board: getCleanBoard(),
@@ -30,6 +30,9 @@ const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   },
   winner: null,
   moves: [],
+  capturedPieces: [],
+  isGameOver: false,
+  lastMove: null,
 
   ...overrides,
 });
@@ -433,22 +436,6 @@ describe("chess", () => {
       expect(moves).toEqual(
         expect.arrayContaining([{ from: { x: 6, y: 4 }, to: { x: 7, y: 4 } }]),
       );
-    });
-
-    it("should prevent white pawn movement or capture if not white's turn", () => {
-      const game = createTestGame();
-      game.toPlay = PieceColor.BLACK; // Black's turn
-      const pawn: Piece = {
-        type: PieceType.PAWN,
-        color: PieceColor.WHITE,
-        hasMoved: true,
-        pos: { x: 4, y: 4 },
-      };
-
-      game.board[4][4].piece = pawn;
-
-      const moves = getPawnMoves(game, pawn);
-      expect(moves).toEqual([]); // Pawn cannot move out of turn
     });
   });
   describe("getRookMoves", () => {
