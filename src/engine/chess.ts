@@ -1,5 +1,3 @@
-import { bool } from "sharp";
-
 export enum PieceColor {
   BLACK = "black",
   WHITE = "white",
@@ -278,9 +276,6 @@ export const getPieceMoves = (game: ChessGame, piece: Piece): Move[] => {
 };
 
 export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
-  if (pawn.color !== game.toPlay) {
-    return [];
-  }
   let offsets: Position[] = [];
   if (pawn.color === PieceColor.WHITE) {
     offsets = [
@@ -379,10 +374,6 @@ export const getLinearMoves = (
 };
 
 export const getRookMoves = (game: ChessGame, rook: Piece): Move[] => {
-  if (rook.color !== game.toPlay) {
-    return [];
-  }
-
   const possibleMoves: Move[] = [];
   const directions: Position[] = [
     { x: 0, y: 1 },
@@ -432,9 +423,6 @@ export const getKnightMoves = (game: ChessGame, knight: Piece): Move[] => {
 };
 
 export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
-  if (bishop.color !== game.toPlay) {
-    return [];
-  }
   const possibleMoves: Move[] = [];
   const directions: Position[] = [
     { x: 1, y: 1 },
@@ -447,9 +435,6 @@ export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
 };
 
 export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
-  if (queen.color !== game.toPlay) {
-    return [];
-  }
   const possibleMoves: Move[] = [];
   const directions: Position[] = [
     { x: 1, y: 0 },
@@ -466,9 +451,6 @@ export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
 };
 
 export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
-  if (king.color !== game.toPlay) {
-    return [];
-  }
   const possibleMoves: Move[] = [];
   const steps: Position[] = [
     { x: 1, y: 0 },
@@ -500,34 +482,16 @@ export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
   return possibleMoves;
 };
 
-export const getPieceString = (piece: Piece | null): string => {
-  if (!piece) {
-    return " ";
-  }
-  const stringMap = {
-    [PieceType.PAWN]: "P",
-    [PieceType.ROOK]: "R",
-    [PieceType.KNIGHT]: "N",
-    [PieceType.BISHOP]: "B",
-    [PieceType.QUEEN]: "Q",
-    [PieceType.KING]: "K",
-  };
-
-  return piece?.color === PieceColor.WHITE
-    ? stringMap[piece.type].toUpperCase()
-    : stringMap[piece.type].toLowerCase();
-};
-
 export const getAllPossibleBasicMoves = (
   chessGame: ChessGame,
   color?: PieceColor,
 ): Move[] => {
-  const toPlay = color || chessGame.toPlay;
+  const toPlayColor = color || chessGame.toPlay;
   const piecesToPlay: Piece[] = [];
   for (let x = 0; x < 8; x++) {
     for (let y = 0; y < 8; y++) {
       const piece = chessGame.board[x][y].piece;
-      if (piece && piece.color === toPlay) {
+      if (piece && piece.color === toPlayColor) {
         piecesToPlay.push(piece);
       }
     }
