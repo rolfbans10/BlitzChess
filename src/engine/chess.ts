@@ -507,7 +507,7 @@ export const getPieceString = (piece: Piece | null): string => {
     : stringMap[piece.type].toLowerCase();
 };
 
-export const getAllPossibleMoves = (chessGame: ChessGame): Move[] => {
+export const getAllPossibleBasicMoves = (chessGame: ChessGame): Move[] => {
   const toPlay = chessGame.toPlay;
   const piecesToPlay: Piece[] = [];
   for (let x = 0; x < 8; x++) {
@@ -518,13 +518,14 @@ export const getAllPossibleMoves = (chessGame: ChessGame): Move[] => {
       }
     }
   }
-  const moves: Move[] = [];
+  let moves: Move[] = [];
   for (const piece of piecesToPlay) {
     if (!piece) {
       continue;
     }
     moves.push(...getPieceMoves(chessGame, piece));
   }
+
   return moves;
 };
 

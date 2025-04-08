@@ -1,6 +1,6 @@
 import {
   ChessGame,
-  getAllPossibleMoves,
+  getAllPossibleBasicMoves,
   getBishopMoves,
   getCleanBoard,
   getKingMoves,
@@ -1233,11 +1233,11 @@ describe("chess", () => {
       expect(moves).toEqual(expect.arrayContaining(expectedMoves));
     });
   });
-  describe("getAllPossibleMoves", () => {
+  describe("getAllPossibleBasicMoves", () => {
     it("should return no moves if the player has no pieces left", () => {
       const game = createTestGame();
 
-      const moves = getAllPossibleMoves(game);
+      const moves = getAllPossibleBasicMoves(game);
 
       expect(moves).toHaveLength(0);
     });
@@ -1251,7 +1251,7 @@ describe("chess", () => {
         pos: { x: 4, y: 4 },
       };
 
-      const moves = getAllPossibleMoves(game);
+      const moves = getAllPossibleBasicMoves(game);
       const expectedMoves: Move[] = [
         { from: { x: 4, y: 4 }, to: { x: 5, y: 4 } },
       ];
@@ -1277,7 +1277,7 @@ describe("chess", () => {
         pos: { x: 5, y: 4 },
       };
 
-      const moves = getAllPossibleMoves(game);
+      const moves = getAllPossibleBasicMoves(game);
 
       expect(moves).toHaveLength(0);
     });
@@ -1311,7 +1311,7 @@ describe("chess", () => {
         pos: { x: 5, y: 5 },
       };
 
-      const moves = getAllPossibleMoves(game);
+      const moves = getAllPossibleBasicMoves(game);
       const expectedMoves: Move[] = [
         // capture move
         { from: { x: 4, y: 4 }, to: { x: 5, y: 5 } },
