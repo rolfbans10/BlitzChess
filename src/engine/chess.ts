@@ -275,9 +275,6 @@ export const getPieceMoves = (game: ChessGame, piece: Piece): Move[] => {
 };
 
 export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
-  if (pawn.color !== game.toPlay) {
-    return [];
-  }
   let offsets: Position[] = [];
   if (pawn.color === PieceColor.WHITE) {
     offsets = [
@@ -376,10 +373,6 @@ export const getLinearMoves = (
 };
 
 export const getRookMoves = (game: ChessGame, rook: Piece): Move[] => {
-  if (rook.color !== game.toPlay) {
-    return [];
-  }
-
   const possibleMoves: Move[] = [];
   const directions: Position[] = [
     { x: 0, y: 1 },
@@ -429,9 +422,6 @@ export const getKnightMoves = (game: ChessGame, knight: Piece): Move[] => {
 };
 
 export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
-  if (bishop.color !== game.toPlay) {
-    return [];
-  }
   const possibleMoves: Move[] = [];
   const directions: Position[] = [
     { x: 1, y: 1 },
@@ -444,9 +434,6 @@ export const getBishopMoves = (game: ChessGame, bishop: Piece): Move[] => {
 };
 
 export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
-  if (queen.color !== game.toPlay) {
-    return [];
-  }
   const possibleMoves: Move[] = [];
   const directions: Position[] = [
     { x: 1, y: 0 },
@@ -463,9 +450,6 @@ export const getQueenMoves = (game: ChessGame, queen: Piece): Move[] => {
 };
 
 export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
-  if (king.color !== game.toPlay) {
-    return [];
-  }
   const possibleMoves: Move[] = [];
   const steps: Position[] = [
     { x: 1, y: 0 },
@@ -497,31 +481,16 @@ export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
   return possibleMoves;
 };
 
-export const getPieceString = (piece: Piece | null): string => {
-  if (!piece) {
-    return " ";
-  }
-  const stringMap = {
-    [PieceType.PAWN]: "P",
-    [PieceType.ROOK]: "R",
-    [PieceType.KNIGHT]: "N",
-    [PieceType.BISHOP]: "B",
-    [PieceType.QUEEN]: "Q",
-    [PieceType.KING]: "K",
-  };
-
-  return piece?.color === PieceColor.WHITE
-    ? stringMap[piece.type].toUpperCase()
-    : stringMap[piece.type].toLowerCase();
-};
-
-export const getAllPossibleBasicMoves = (chessGame: ChessGame): Move[] => {
-  const toPlay = chessGame.toPlay;
+export const getAllPossibleBasicMoves = (
+  chessGame: ChessGame,
+  color?: PieceColor,
+): Move[] => {
+  const toPlayColor = color || chessGame.toPlay;
   const piecesToPlay: Piece[] = [];
   for (let x = 0; x < 8; x++) {
     for (let y = 0; y < 8; y++) {
       const piece = chessGame.board[x][y].piece;
-      if (piece && piece.color === toPlay) {
+      if (piece && piece.color === toPlayColor) {
         piecesToPlay.push(piece);
       }
     }
@@ -549,45 +518,18 @@ export const getKing = (game: ChessGame, color: PieceColor): Piece | null => {
   return null;
 };
 
-export const movePiece = (game: ChessGame, move: Move): ChessGame => {
-  const newGame = { ...game };
-  const from = move.from;
-  const to = move.to;
-  const fromPiece = newGame.board[from.x][from.y].piece;
-  if (!fromPiece) {
-    throw new Error("fromPiece is null");
-  }
-  const toPiece = newGame.board[to.x][to.y].piece;
-  let isCapture = false;
-  if (toPiece) {
-    if (toPiece.color === fromPiece.color) {
-      throw new Error("Cannot move to the same color");
-    } else {
-      isCapture = true;
-    }
-  }
-  if (isCapture) {
-  }
-
-  return newGame;
-};
-
 export const isCheck = (game: ChessGame): boolean => {
-  const newGame = { ...game };
-  const currentToPlay = newGame.toPlay;
-  if (currentToPlay === PieceColor.WHITE) {
-    newGame.toPlay = PieceColor.BLACK;
-  } else {
-    newGame.toPlay = PieceColor.WHITE;
-  }
+  const currentToPlay = game.toPlay;
+  const opponentColor =
+    currentToPlay === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
 
-  const basicMoves = getAllPossibleBasicMoves(newGame);
-  const king = getKing(newGame, currentToPlay);
+  const opponentBasicMoves = getAllPossibleBasicMoves(game, opponentColor);
+  const king = getKing(game, currentToPlay);
   if (!king) {
     return false;
   }
   // is there any move than can attack the king?
-  for (const move of basicMoves) {
+  for (const move of opponentBasicMoves) {
     if (move.to.x === king.pos.x && move.to.y === king.pos.y) {
       return true;
     }
@@ -639,15 +581,8 @@ export const createNewChessGame = (
     winner: null,
     moves: [],
     capturedPieces: [],
-    lastMove:  null,
+    lastMove: null,
     isGameOver: false,
-
-    isCheckMate: false,
-    isStaleMate: false,
-    isDraw: boolean;
-    isDrawByRepetition: boolean;
-    isDrawByFiftyMoves: boolean;
-    isDrawByInsufficientMaterial: boolean;
   };
 
   return game;
