@@ -1,5 +1,3 @@
-import { bool } from "sharp";
-
 export enum PieceColor {
   BLACK = "black",
   WHITE = "white",
@@ -52,7 +50,6 @@ export interface ChessGame {
 export interface Move {
   from: Position;
   to: Position;
-  // color: PieceColor;
   isCapture?: boolean;
   isCheck?: boolean;
   isPromotion?: boolean;
@@ -518,11 +515,8 @@ export const getPieceString = (piece: Piece | null): string => {
     : stringMap[piece.type].toLowerCase();
 };
 
-export const getAllPossibleBasicMoves = (
-  chessGame: ChessGame,
-  color?: PieceColor,
-): Move[] => {
-  const toPlay = color || chessGame.toPlay;
+export const getAllPossibleBasicMoves = (chessGame: ChessGame): Move[] => {
+  const toPlay = chessGame.toPlay;
   const piecesToPlay: Piece[] = [];
   for (let x = 0; x < 8; x++) {
     for (let y = 0; y < 8; y++) {
@@ -559,72 +553,41 @@ export const movePiece = (game: ChessGame, move: Move): ChessGame => {
   const newGame = { ...game };
   const from = move.from;
   const to = move.to;
-  const fromSquare = newGame.board[from.x][from.y];
-  if (!fromSquare.piece) {
-    throw new Error("piece is null");
+  const fromPiece = newGame.board[from.x][from.y].piece;
+  if (!fromPiece) {
+    throw new Error("fromPiece is null");
   }
-  const toSquare = newGame.board[to.x][to.y];
-  if (toSquare.piece) {
-    if (toSquare.piece.color === fromSquare.piece.color) {
+  const toPiece = newGame.board[to.x][to.y].piece;
+  let isCapture = false;
+  if (toPiece) {
+    if (toPiece.color === fromPiece.color) {
       throw new Error("Cannot move to the same color");
+    } else {
+      isCapture = true;
     }
-    //capturing
-    newGame.capturedPieces.push(toSquare.piece);
-    fromSquare.piece.pos = to;
-    newGame.board[from.x][from.y].piece = null;
-    newGame.board[to.x][to.y].piece = fromSquare.piece;
-  } else {
-    //moving to empty square
-    fromSquare.piece.pos = to;
-    newGame.board[to.x][to.y].piece = fromSquare.piece;
-    newGame.board[from.x][from.y].piece = null;
   }
-
-  // switch turn
-  if (newGame.toPlay === PieceColor.WHITE) {
-    newGame.toPlay = PieceColor.BLACK;
-  } else {
-    newGame.toPlay = PieceColor.WHITE;
+  if (isCapture) {
   }
 
   return newGame;
 };
 
-export const willMoveDiscoverCheckOnOurKing = (
-  game: ChessGame,
-  move: Move,
-): boolean => {
-  const myColor = game.toPlay;
-  let newGame = movePiece(game, move);
-  return isCheck(newGame, myColor);
-};
-
-// export const willMovePutKingOnCheck = (): boolean => {
-//   return false;
-// };
-
-export const getOpponentColor = (myColor: PieceColor): PieceColor => {
-  if (myColor === PieceColor.WHITE) {
-    return PieceColor.BLACK;
-  }
-  return PieceColor.WHITE;
-};
-
-export const isCheck = (
-  game: ChessGame,
-  kingColorToCheck?: PieceColor,
-): boolean => {
+export const isCheck = (game: ChessGame): boolean => {
   const newGame = { ...game };
-  const kingColor = kingColorToCheck || newGame.toPlay;
-  const opponentColor = getOpponentColor(kingColor);
+  const currentToPlay = newGame.toPlay;
+  if (currentToPlay === PieceColor.WHITE) {
+    newGame.toPlay = PieceColor.BLACK;
+  } else {
+    newGame.toPlay = PieceColor.WHITE;
+  }
 
-  const opponentBasicMoves = getAllPossibleBasicMoves(newGame, opponentColor);
-  const king = getKing(newGame, kingColor);
+  const basicMoves = getAllPossibleBasicMoves(newGame);
+  const king = getKing(newGame, currentToPlay);
   if (!king) {
     return false;
   }
-  // is there any move than can attack your king?
-  for (const move of opponentBasicMoves) {
+  // is there any move than can attack the king?
+  for (const move of basicMoves) {
     if (move.to.x === king.pos.x && move.to.y === king.pos.y) {
       return true;
     }
@@ -638,8 +601,6 @@ export const filterMovesUsingChessRules = (
 ): Move[] => {
   /**
    * Check
-   *  - is your king in check after your move
-   *  -
    * Checkmate
    * Stalemate
    * Castling
@@ -655,10 +616,7 @@ export const filterMovesUsingChessRules = (
    * Losing on Time
    * Illegal Move Rule
    */
-  return moves.filter((move, index, moves): boolean => {
-    // will it discover a check?
-    return willMoveDiscoverCheckOnOurKing(chessGame, move);
-  });
+  return moves;
 };
 
 const getAllValidMoves = (chessGame: ChessGame): Move[] => {
@@ -681,8 +639,15 @@ export const createNewChessGame = (
     winner: null,
     moves: [],
     capturedPieces: [],
-    lastMove: null,
+    lastMove:  null,
     isGameOver: false,
+
+    isCheckMate: false,
+    isStaleMate: false,
+    isDraw: boolean;
+    isDrawByRepetition: boolean;
+    isDrawByFiftyMoves: boolean;
+    isDrawByInsufficientMaterial: boolean;
   };
 
   return game;
