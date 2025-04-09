@@ -7,10 +7,7 @@ import {
   Player,
   Square,
 } from "@/engine/types";
-import {
-  getAllPossibleBasicMoves,
-  getPieceBasicMoves,
-} from "@/engine/basic-moves";
+import { getAllPossibleBasicMoves } from "@/engine/basic-moves";
 
 export const getCleanBoard = (): Square[][] => {
   const board: Square[][] = [];
