@@ -1,4 +1,4 @@
-import { Piece, PieceColor, PieceType } from "@/engine/chess";
+import { Piece, PieceColor, PieceType } from "@/engine/types";
 
 export const getPieceString = (piece: Piece | null): string => {
   if (!piece) {

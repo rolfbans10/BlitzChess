@@ -1,21 +1,15 @@
+import { getCleanBoard, setupInitialPositions } from "@/engine/chess";
+import { getPieceString } from "@/engine/utils";
+import { ChessGame, Move, Piece, PieceColor, PieceType, Square } from "./types";
 import {
-  ChessGame,
   getAllPossibleBasicMoves,
   getBishopMoves,
-  getCleanBoard,
   getKingMoves,
   getKnightMoves,
   getPawnMoves,
   getQueenMoves,
   getRookMoves,
-  Move,
-  Piece,
-  PieceColor,
-  PieceType,
-  setupInitialPositions,
-  Square,
-} from "@/engine/chess";
-import { getPieceString } from "@/engine/utils";
+} from "@/engine/basic-moves";
 
 const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   board: getCleanBoard(),
