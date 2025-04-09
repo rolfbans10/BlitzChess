@@ -2,7 +2,10 @@
  * This file contains all the functions needed to invalidate basic moves
  */
 // TODO:
-import { ChessGame, Move, PieceColor } from "@/engine/types";
+import { ChessGame, Move, MoveFilter, PieceColor } from "@/engine/types";
+import { getAllPossibleBasicMoves } from "@/engine/basic-moves";
+import { getKing, movePiece } from "@/engine/chess";
+import { getOppositeColor } from "@/engine/utils";
 
 /**
  * Check
@@ -22,7 +25,23 @@ import { ChessGame, Move, PieceColor } from "@/engine/types";
  * Illegal Move Rule
  */
 
-export type MoveFilter = (game: ChessGame, move: Move) => boolean;
+export const isCheck = (game: ChessGame, myColor?: PieceColor): boolean => {
+  const kingColor = myColor || game.toPlay;
+  const opponentColor = getOppositeColor(kingColor);
+
+  const opponentBasicMoves = getAllPossibleBasicMoves(game, opponentColor);
+  const king = getKing(game, kingColor);
+  if (!king) {
+    return false;
+  }
+  // is there any move than can attack the king?
+  for (const move of opponentBasicMoves) {
+    if (move.to.x === king.pos.x && move.to.y === king.pos.y) {
+      return true;
+    }
+  }
+  return false;
+};
 
 // will this move put my king in check
 export const doesMoveDiscoverCheckOnMyKing: MoveFilter = (
@@ -32,5 +51,22 @@ export const doesMoveDiscoverCheckOnMyKing: MoveFilter = (
 ): boolean => {
   const myColor = myKingColor || game.toPlay;
 
-  return false;
+  const newGame = movePiece(game, move);
+  return isCheck(newGame, myColor);
+};
+
+export const filterAllInvalidMoves = (
+  game: ChessGame,
+  myColor?: PieceColor,
+): Move[] => {
+  const moves =
+    myColor === PieceColor.WHITE
+      ? game.whiteMoves.length === 0
+        ? getAllPossibleBasicMoves(game, PieceColor.WHITE)
+        : game.whiteMoves
+      : game.blackMoves.length === 0
+        ? getAllPossibleBasicMoves(game, PieceColor.BLACK)
+        : game.blackMoves;
+
+  return moves.filter((move) => !doesMoveDiscoverCheckOnMyKing(game, move));
 };

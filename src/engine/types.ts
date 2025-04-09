@@ -45,6 +45,8 @@ export interface ChessGame {
   capturedPieces: Piece[];
   lastMove: Move | null;
   isGameOver: boolean;
+  whiteMoves: Move[];
+  blackMoves: Move[];
 }
 
 export interface Move {
@@ -56,3 +58,5 @@ export interface Move {
   isCastling?: boolean;
   isEnPassant?: boolean;
 }
+
+export type MoveFilter = (game: ChessGame, move: Move) => boolean;

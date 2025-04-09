@@ -7,8 +7,8 @@ import {
   Player,
   Square,
 } from "@/engine/types";
-import { getAllPossibleBasicMoves } from "@/engine/basic-moves";
 import { getOppositeColor } from "@/engine/utils";
+import { filterAllInvalidMoves } from "@/engine/move-filters";
 
 export const getCleanBoard = (): Square[][] => {
   const board: Square[][] = [];
@@ -220,36 +220,10 @@ export const getKing = (game: ChessGame, color: PieceColor): Piece | null => {
   return null;
 };
 
-export const isCheck = (game: ChessGame): boolean => {
-  const currentToPlay = game.toPlay;
-  const opponentColor =
-    currentToPlay === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;
+const getAllValidMoves = (game: ChessGame, myColor?: PieceColor): Move[] => {
+  let moves: Move[];
 
-  const opponentBasicMoves = getAllPossibleBasicMoves(game, opponentColor);
-  const king = getKing(game, currentToPlay);
-  if (!king) {
-    return false;
-  }
-  // is there any move than can attack the king?
-  for (const move of opponentBasicMoves) {
-    if (move.to.x === king.pos.x && move.to.y === king.pos.y) {
-      return true;
-    }
-  }
-  return false;
-};
-
-export const filterMovesUsingChessRules = (
-  chessGame: ChessGame,
-  moves: Move[],
-): Move[] => {
-  return moves;
-};
-
-const getAllValidMoves = (chessGame: ChessGame): Move[] => {
-  let moves = getAllPossibleBasicMoves(chessGame);
-
-  moves = filterMovesUsingChessRules(chessGame, moves);
+  moves = filterAllInvalidMoves(game, myColor);
 
   return moves;
 };
@@ -269,6 +243,7 @@ export const movePiece = (game: ChessGame, move: Move): ChessGame => {
     // capture
     newGame.capturedPieces.push({ ...toSquare.piece });
   }
+  fromSquare.piece.hasMoved = true;
   newGame.board[move.to.x][move.to.y].piece = { ...fromSquare.piece };
   newGame.board[move.from.x][move.from.y].piece = null;
 
@@ -290,10 +265,15 @@ export const createNewChessGame = (
     toPlay: PieceColor.WHITE,
     winner: null,
     moves: [],
+    whiteMoves: [],
+    blackMoves: [],
     capturedPieces: [],
     lastMove: null,
     isGameOver: false,
   };
+
+  game.whiteMoves = getAllValidMoves(game, PieceColor.WHITE);
+  game.blackMoves = getAllValidMoves(game, PieceColor.BLACK);
 
   return game;
 };
