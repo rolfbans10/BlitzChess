@@ -254,9 +254,19 @@ export const movePiece = (game: ChessGame, move: Move): ChessGame => {
   return newGame;
 };
 
+export const defaultPlayer1: Player = {
+  name: "Player 1",
+  color: PieceColor.WHITE,
+};
+
+export const defaultPlayer2: Player = {
+  name: "Player 2",
+  color: PieceColor.BLACK,
+};
+
 export const createNewChessGame = (
-  player1: Player,
-  player2: Player,
+  player1: Player = defaultPlayer1,
+  player2: Player = defaultPlayer2,
 ): ChessGame => {
   const game: ChessGame = {
     board: setupInitialPositions(),
