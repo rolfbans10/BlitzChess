@@ -17,3 +17,6 @@ export const getPieceString = (piece: Piece | null): string => {
     ? stringMap[piece.type].toUpperCase()
     : stringMap[piece.type].toLowerCase();
 };
+
+export const getOppositeColor = (color: PieceColor): PieceColor =>
+  color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE;

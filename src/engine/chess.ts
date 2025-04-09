@@ -8,6 +8,7 @@ import {
   Square,
 } from "@/engine/types";
 import { getAllPossibleBasicMoves } from "@/engine/basic-moves";
+import { getOppositeColor } from "@/engine/utils";
 
 export const getCleanBoard = (): Square[][] => {
   const board: Square[][] = [];
@@ -251,6 +252,31 @@ const getAllValidMoves = (chessGame: ChessGame): Move[] => {
   moves = filterMovesUsingChessRules(chessGame, moves);
 
   return moves;
+};
+
+export const movePiece = (game: ChessGame, move: Move): ChessGame => {
+  const newGame: ChessGame = { ...game };
+  const fromSquare = game.board[move.from.x][move.from.y];
+  const toSquare = game.board[move.to.x][move.to.y];
+
+  if (!fromSquare.piece) {
+    throw new Error("from square is empty");
+  }
+  if (toSquare.piece) {
+    if (toSquare.piece.color === fromSquare.piece.color) {
+      throw new Error("cannot capture piece of the same color");
+    }
+    // capture
+    newGame.capturedPieces.push({ ...toSquare.piece });
+  }
+  newGame.board[move.to.x][move.to.y].piece = { ...fromSquare.piece };
+  newGame.board[move.from.x][move.from.y].piece = null;
+
+  newGame.moves.push(move);
+  newGame.lastMove = move;
+  newGame.toPlay = getOppositeColor(newGame.toPlay);
+
+  return newGame;
 };
 
 export const createNewChessGame = (
