@@ -1,5 +1,9 @@
 import { createTestGame } from "@/engine/test-utils";
-import { doesMoveDiscoverCheckOnMyKing, isCheck } from "@/engine/move-filters";
+import {
+  canMoveEscapeCheck,
+  doesMoveDiscoverCheckOnMyKing,
+  isCheck,
+} from "@/engine/move-filters";
 import { ChessGame, Move, PieceColor, PieceType } from "@/engine/types";
 
 describe("Move Filters", () => {
@@ -269,5 +273,123 @@ describe("Move Filters", () => {
 
       expect(result).toBe(true);
     });
+  });
+  describe("canMoveEscapeCheck", () => {
+    it("returns true if the king is not in check", () => {
+      const game: ChessGame = createTestGame();
+
+      // Place white king
+      game.board[4][4] = {
+        piece: {
+          type: PieceType.KING,
+          color: PieceColor.WHITE,
+          pos: { x: 4, y: 4 },
+        },
+      };
+
+      // Move a random piece (no check exists)
+      const move: Move = {
+        from: { x: 4, y: 4 },
+        to: { x: 4, y: 5 },
+      };
+
+      const result = canMoveEscapeCheck(game, move, PieceColor.WHITE);
+      expect(result).toBe(true);
+    });
+
+    // it("returns true if the move resolves a check", () => {
+    //   const game: ChessGame = createTestGame();
+    //
+    //   // Place white king
+    //   game.board[4][4] = {
+    //     piece: {
+    //       type: PieceType.KING,
+    //       color: PieceColor.WHITE,
+    //       pos: { x: 4, y: 4 },
+    //     },
+    //   };
+    //
+    //   // Place black rook creating a check
+    //   game.board[4][7] = {
+    //     piece: {
+    //       type: PieceType.ROOK,
+    //       color: PieceColor.BLACK,
+    //       pos: { x: 4, y: 7 },
+    //     },
+    //   };
+    //
+    //   // Move the white king out of check
+    //   const move: Move = {
+    //     from: { x: 4, y: 4 },
+    //     to: { x: 3, y: 4 },
+    //   };
+    //
+    //   const result = canMoveEscapeCheck(game, move, PieceColor.WHITE);
+    //   expect(result).toBe(true);
+    // });
+    //
+    // it("returns false if the move does not resolve the check", () => {
+    //   const game: ChessGame = createTestGame();
+    //
+    //   // Place white king
+    //   game.board[4][4] = {
+    //     piece: {
+    //       type: PieceType.KING,
+    //       color: PieceColor.WHITE,
+    //       pos: { x: 4, y: 4 },
+    //     },
+    //   };
+    //
+    //   // Place black rook creating a check
+    //   game.board[4][7] = {
+    //     piece: {
+    //       type: PieceType.ROOK,
+    //       color: PieceColor.BLACK,
+    //       pos: { x: 4, y: 7 },
+    //     },
+    //   };
+    //
+    //   // Move the white king but remain in check
+    //   const move: Move = {
+    //     from: { x: 4, y: 4 },
+    //     to: { x: 4, y: 5 },
+    //   };
+    //
+    //   const result = canMoveEscapeCheck(game, move, PieceColor.WHITE);
+    //   expect(result).toBe(false);
+    // });
+    //
+    // it("uses the provided myColor argument if given", () => {
+    //   const game: ChessGame = createTestGame({
+    //     toPlay: PieceColor.BLACK, // Set the current turn to black
+    //   });
+    //
+    //   // Place white king
+    //   game.board[4][4] = {
+    //     piece: {
+    //       type: PieceType.KING,
+    //       color: PieceColor.WHITE,
+    //       pos: { x: 4, y: 4 },
+    //     },
+    //   };
+    //
+    //   // Simulate a check against the white king
+    //   game.board[4][7] = {
+    //     piece: {
+    //       type: PieceType.ROOK,
+    //       color: PieceColor.BLACK,
+    //       pos: { x: 4, y: 7 },
+    //     },
+    //   };
+    //
+    //   // Move the white king (explicitly passing `PieceColor.WHITE`)
+    //   const move: Move = {
+    //     from: { x: 4, y: 4 },
+    //     to: { x: 3, y: 4 },
+    //   };
+    //
+    //   const result = canMoveEscapeCheck(game, move, PieceColor.WHITE);
+    //   expect(result).toBe(true);
+    // });
   });
 });

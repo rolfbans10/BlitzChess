@@ -55,6 +55,19 @@ export const doesMoveDiscoverCheckOnMyKing: MoveFilter = (
   return isCheck(newGame, myColor);
 };
 
+export const canMoveEscapeCheck: MoveFilter = (
+  game: ChessGame,
+  move: Move,
+  myColor?: PieceColor,
+): boolean => {
+  console.log("isCheck:", isCheck(game, myColor));
+  if (!isCheck(game, myColor)) {
+    return true;
+  }
+  const newGame = movePiece(game, move);
+  return !isCheck(newGame, myColor);
+};
+
 export const filterAllInvalidMoves = (
   game: ChessGame,
   myColor?: PieceColor,
@@ -68,5 +81,7 @@ export const filterAllInvalidMoves = (
         ? getAllPossibleBasicMoves(game, PieceColor.BLACK)
         : game.blackMoves;
 
-  return moves.filter((move) => !doesMoveDiscoverCheckOnMyKing(game, move));
+  return moves
+    .filter((move) => canMoveEscapeCheck(game, move))
+    .filter((move) => !doesMoveDiscoverCheckOnMyKing(game, move));
 };
