@@ -59,4 +59,8 @@ export interface Move {
   isEnPassant?: boolean;
 }
 
-export type MoveFilter = (game: ChessGame, move: Move) => boolean;
+export type MoveFilter = (
+  game: ChessGame,
+  move: Move,
+  myColor?: PieceColor,
+) => boolean;

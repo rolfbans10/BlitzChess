@@ -5,11 +5,11 @@ export const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   board: getCleanBoard(),
   toPlay: PieceColor.WHITE,
   player1: {
-    name: "player 1",
+    name: "Player 1",
     color: PieceColor.WHITE,
   },
   player2: {
-    name: "player 2",
+    name: "Player 2",
     color: PieceColor.BLACK,
   },
   winner: null,
@@ -17,6 +17,8 @@ export const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   capturedPieces: [],
   isGameOver: false,
   lastMove: null,
+  whiteMoves: [],
+  blackMoves: [],
 
   ...overrides,
 });
