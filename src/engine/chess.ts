@@ -7,8 +7,9 @@ import {
   Player,
   Square,
 } from "@/engine/types";
-import { getOppositeColor } from "@/engine/utils";
-import { filterAllInvalidMoves } from "@/engine/move-filters";
+import { getOppositeColor, getPieceString } from "@/engine/utils";
+import { filterAllInvalidMoves, isCheck } from "@/engine/move-filters";
+import { printBoard } from "@/engine/test-utils";
 
 export const getCleanBoard = (): Square[][] => {
   const board: Square[][] = [];
@@ -244,6 +245,7 @@ export const movePiece = (game: ChessGame, move: Move): ChessGame => {
     newGame.capturedPieces.push({ ...toSquare.piece });
   }
   fromSquare.piece.hasMoved = true;
+  fromSquare.piece.pos = move.to;
   newGame.board[move.to.x][move.to.y].piece = { ...fromSquare.piece };
   newGame.board[move.from.x][move.from.y].piece = null;
 

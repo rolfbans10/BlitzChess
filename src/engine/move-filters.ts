@@ -28,11 +28,10 @@ import { getOppositeColor } from "@/engine/utils";
 export const isCheck = (game: ChessGame, myColor?: PieceColor): boolean => {
   const kingColor = myColor || game.toPlay;
   const opponentColor = getOppositeColor(kingColor);
-
   const opponentBasicMoves = getAllPossibleBasicMoves(game, opponentColor);
   const king = getKing(game, kingColor);
   if (!king) {
-    return false;
+    throw new Error("King not found");
   }
   // is there any move than can attack the king?
   for (const move of opponentBasicMoves) {
@@ -60,7 +59,6 @@ export const canMoveEscapeCheck: MoveFilter = (
   move: Move,
   myColor?: PieceColor,
 ): boolean => {
-  console.log("isCheck:", isCheck(game, myColor));
   if (!isCheck(game, myColor)) {
     return true;
   }

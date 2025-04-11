@@ -1,5 +1,6 @@
-import { ChessGame, Move, PieceColor } from "@/engine/types";
+import { ChessGame, Move, PieceColor, Square } from "@/engine/types";
 import { getCleanBoard } from "@/engine/chess";
+import { getPieceString } from "@/engine/utils";
 
 export const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   board: getCleanBoard(),
@@ -45,4 +46,21 @@ export const findExtraMoves = (
     }
   }
   return extraMoves;
+};
+
+export const printBoard = (board: Square[][]) => {
+  let boardString = "";
+  const divider = "---".repeat(8) + "\n";
+  boardString += divider;
+  for (let y = 0; y < 8; y++) {
+    boardString += "|";
+    for (let x = 0; x < 8; x++) {
+      const piece = board[x][y].piece;
+      boardString += getPieceString(piece);
+      boardString += "|";
+    }
+    boardString += "\n";
+    boardString += divider;
+  }
+  console.error(boardString);
 };
