@@ -1,5 +1,6 @@
 import react, { JSX } from "react";
-import { getPieceString, Square as ChessSquare } from "@/engine/chess";
+import { Square as ChessSquare } from "@/engine/types";
+import { getPieceString } from "@/engine/utils";
 
 export interface SquareProps {
   square: ChessSquare;

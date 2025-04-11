@@ -8,10 +8,17 @@ export const fromMoveToUCI = (move: Move): string => {
 };
 
 export const fromUCIToMove = (uci: string): Move => {
+  if (!isValidUCIString(uci)) {
+    throw new Error("Invalid UCI string: " + uci);
+  }
   const from: Position = {
     x: rows.indexOf(uci[1]),
     y: columns.indexOf(uci[0]),
   };
   const to: Position = { x: rows.indexOf(uci[3]), y: columns.indexOf(uci[2]) };
   return { from, to };
+};
+
+export const isValidUCIString = (uci: string): boolean => {
+  return /^[a-h][1-8][a-h][1-8]$/.test(uci);
 };

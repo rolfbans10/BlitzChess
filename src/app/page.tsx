@@ -2,12 +2,8 @@
 
 import { useState } from "react";
 import { Square } from "@/components/Square";
-import {
-  ChessGame,
-  createNewChessGame,
-  PieceColor,
-  Player,
-} from "@/engine/chess";
+import { createNewChessGame } from "@/engine/chess";
+import { ChessGame, PieceColor, Player } from "@/engine/types";
 
 const player1: Player = {
   name: "Player One",
