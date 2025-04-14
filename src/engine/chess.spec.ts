@@ -1,6 +1,10 @@
-import {createNewChessGame, getCleanBoard, setupInitialPositions} from "@/engine/chess";
-import { getPieceString } from "@/engine/utils";
-import { Piece, PieceColor, PieceType, Square } from "./types";
+import {
+  createNewChessGame,
+  getCleanBoard,
+  setupInitialPositions,
+  validateMove,
+} from "@/engine/chess";
+import { Move, Piece, PieceColor, PieceType, Square } from "./types";
 
 describe("chess", () => {
   describe("getCleanBoard", () => {
@@ -189,6 +193,17 @@ describe("chess", () => {
   describe("createNewChessGame", () => {
     it("should create a new game without an error", () => {
       createNewChessGame();
-    })
-  })
+    });
+  });
+  describe("validateMove", () => {
+    it("should return true if the move is valid", () => {
+      const game = createNewChessGame();
+      const move: Move = {
+        from: { x: 1, y: 1 },
+        to: { x: 2, y: 1 },
+      };
+      const result = validateMove(game, move, PieceColor.WHITE);
+      expect(result).toBe(true);
+    });
+  });
 });

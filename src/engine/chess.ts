@@ -10,6 +10,7 @@ import {
 import { getOppositeColor } from "@/engine/utils";
 import { filterAllInvalidMoves } from "@/engine/move-filters";
 import { getAllPossibleBasicMoves } from "@/engine/basic-moves";
+import { produce, WritableDraft } from "immer";
 
 export const getCleanBoard = (): Square[][] => {
   const board: Square[][] = [];
@@ -222,38 +223,63 @@ export const getKing = (game: ChessGame, color: PieceColor): Piece | null => {
 };
 
 const getAllValidMoves = (game: ChessGame, myColor?: PieceColor): Move[] => {
-  let moves: Move[];
+  const color = myColor || game.toPlay;
+  let moves: Move[] = getAllPossibleBasicMoves(game, color);
 
   moves = filterAllInvalidMoves(game, myColor);
 
   return moves;
 };
 
+export const validateMove = (
+  game: ChessGame,
+  move: Move,
+  moveColor?: PieceColor,
+): boolean => {
+  const color = moveColor || game.toPlay;
+  const newGame = { ...game };
+  const validMoves =
+    color === PieceColor.WHITE ? newGame.whiteMoves : newGame.blackMoves;
+
+  console.log(game);
+  return validMoves.includes(move);
+};
+
 export const movePiece = (game: ChessGame, move: Move): ChessGame => {
-  const newGame: ChessGame = { ...game };
   const fromSquare = game.board[move.from.x][move.from.y];
   const toSquare = game.board[move.to.x][move.to.y];
 
   if (!fromSquare.piece) {
     throw new Error("from square is empty");
   }
-  if (toSquare.piece) {
-    if (toSquare.piece.color === fromSquare.piece.color) {
-      throw new Error("cannot capture piece of the same color");
-    }
-    // capture
-    newGame.capturedPieces.push({ ...toSquare.piece });
-  }
-  fromSquare.piece.hasMoved = true;
-  fromSquare.piece.pos = move.to;
-  newGame.board[move.to.x][move.to.y].piece = { ...fromSquare.piece };
-  newGame.board[move.from.x][move.from.y].piece = null;
 
-  newGame.moves.push(move);
-  newGame.lastMove = move;
-  newGame.toPlay = getOppositeColor(newGame.toPlay);
-  newGame.whiteMoves = getAllPossibleBasicMoves(newGame, PieceColor.WHITE);
-  newGame.blackMoves = getAllPossibleBasicMoves(newGame, PieceColor.BLACK);
+  if (toSquare.piece && toSquare.piece.color === fromSquare.piece.color) {
+    throw new Error("cannot capture piece of the same color");
+  }
+  const newGame: ChessGame = produce(
+    game,
+    (draft: WritableDraft<ChessGame>) => {
+      const fromSquare = draft.board[move.from.x][move.from.y];
+      const toSquare = draft.board[move.to.x][move.to.y];
+      if (fromSquare.piece) {
+        if (toSquare.piece) {
+          // capture
+          draft.capturedPieces.push({ ...toSquare.piece });
+        }
+
+        fromSquare.piece.hasMoved = true;
+        fromSquare.piece.pos = move.to;
+        toSquare.piece = { ...fromSquare.piece };
+        fromSquare.piece = null;
+
+        draft.moves.push(move);
+        draft.lastMove = move;
+        draft.toPlay = getOppositeColor(draft.toPlay);
+        draft.whiteMoves = getAllPossibleBasicMoves(draft, PieceColor.WHITE);
+        draft.blackMoves = getAllPossibleBasicMoves(draft, PieceColor.BLACK);
+      }
+    },
+  );
 
   return newGame;
 };
@@ -271,23 +297,15 @@ export const defaultPlayer2: Player = {
 export const createNewChessGame = (
   player1: Player = defaultPlayer1,
   player2: Player = defaultPlayer2,
-): ChessGame => {
-  const game: ChessGame = {
-    board: setupInitialPositions(),
-    player1,
-    player2,
-    toPlay: PieceColor.WHITE,
-    winner: null,
-    moves: [],
-    whiteMoves: [],
-    blackMoves: [],
-    capturedPieces: [],
-    lastMove: null,
-    isGameOver: false,
-  };
-
-  game.whiteMoves = getAllValidMoves(game, PieceColor.WHITE);
-  game.blackMoves = getAllValidMoves(game, PieceColor.BLACK);
-
-  return game;
-};
+): ChessGame =>
+  produce({}, (game: WritableDraft<ChessGame>): void => {
+    game.board = setupInitialPositions();
+    game.player1 = player1;
+    game.player2 = player2;
+    game.toPlay = PieceColor.WHITE;
+    game.winner = null;
+    game.moves = [];
+    game.whiteMoves = getAllPossibleBasicMoves(game, PieceColor.WHITE);
+    game.blackMoves = getAllPossibleBasicMoves(game, PieceColor.BLACK);
+    game.capturedPieces = [];
+  }) as ChessGame;

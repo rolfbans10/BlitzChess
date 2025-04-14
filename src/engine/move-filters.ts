@@ -82,7 +82,24 @@ export const filterAllInvalidMoves = (
     return [];
   }
 
+  const tempGame = { ...game };
+
   return moves
-    .filter((move) => canMoveEscapeCheck(game, move))
-    .filter((move) => !doesMoveDiscoverCheckOnMyKing(game, move));
+    .filter((move) => canMoveEscapeCheck(tempGame, move, moveColor))
+    .filter(
+      (move) => !doesMoveDiscoverCheckOnMyKing(tempGame, move, moveColor),
+    );
+};
+
+export const placePieceBlindly = (game: ChessGame, move: Move): ChessGame => {
+  const newGame = { ...game };
+  const fromPiece = game.board[move.from.x][move.from.y].piece;
+
+  if (!fromPiece) {
+    throw new Error("from square is empty");
+  }
+  newGame.board[move.to.x][move.to.y].piece = { ...fromPiece, pos: move.to };
+  newGame.board[move.from.x][move.from.y].piece = null;
+
+  return newGame;
 };
