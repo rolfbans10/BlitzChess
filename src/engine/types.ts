@@ -58,9 +58,3 @@ export interface Move {
   isCastling?: boolean;
   isEnPassant?: boolean;
 }
-
-export type MoveFilter = (
-  game: ChessGame,
-  move: Move,
-  myColor?: PieceColor,
-) => boolean;
