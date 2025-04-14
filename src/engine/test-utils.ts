@@ -50,17 +50,18 @@ export const findExtraMoves = (
 
 export const printBoard = (board: Square[][]) => {
   let boardString = "";
-  const divider = "---".repeat(8) + "\n";
+  const divider = "----".repeat(8) + "\n";
   boardString += divider;
-  for (let y = 0; y < 8; y++) {
-    boardString += "|";
-    for (let x = 0; x < 8; x++) {
+  for (let x = 7; x >= 0; x--) {
+    boardString += "| ";
+    for (let y = 0; y < 8; y++) {
       const piece = board[x][y].piece;
       boardString += getPieceString(piece);
-      boardString += "|";
+      boardString += " | ";
     }
-    boardString += "\n";
+    boardString += `${x + 1}\n`;
     boardString += divider;
   }
+  boardString += "  a   b   c   d   e   f   g   h\n";
   console.error(boardString);
 };
