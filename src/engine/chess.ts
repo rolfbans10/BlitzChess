@@ -1,15 +1,7 @@
-import {
-  ChessGame,
-  Move,
-  Piece,
-  PieceColor,
-  PieceType,
-  Player,
-  Square,
-} from "@/engine/types";
-import { getOppositeColor, getPieceString } from "@/engine/utils";
-import { filterAllInvalidMoves, isCheck } from "@/engine/move-filters";
-import { printBoard } from "@/engine/test-utils";
+import {ChessGame, Move, Piece, PieceColor, PieceType, Player, Square,} from "@/engine/types";
+import {getOppositeColor} from "@/engine/utils";
+import {filterAllInvalidMoves} from "@/engine/move-filters";
+import {getAllPossibleBasicMoves} from "@/engine/basic-moves";
 
 export const getCleanBoard = (): Square[][] => {
   const board: Square[][] = [];
@@ -252,6 +244,8 @@ export const movePiece = (game: ChessGame, move: Move): ChessGame => {
   newGame.moves.push(move);
   newGame.lastMove = move;
   newGame.toPlay = getOppositeColor(newGame.toPlay);
+  newGame.whiteMoves = getAllPossibleBasicMoves(newGame, PieceColor.WHITE);
+  newGame.blackMoves = getAllPossibleBasicMoves(newGame, PieceColor.BLACK);
 
   return newGame;
 };
@@ -284,8 +278,8 @@ export const createNewChessGame = (
     isGameOver: false,
   };
 
-  game.whiteMoves = getAllValidMoves(game, PieceColor.WHITE);
-  game.blackMoves = getAllValidMoves(game, PieceColor.BLACK);
+  game.whiteMoves = getAllPossibleBasicMoves(game, PieceColor.WHITE);
+  game.blackMoves = getAllPossibleBasicMoves(game, PieceColor.BLACK);
 
   return game;
 };

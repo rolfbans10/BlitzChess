@@ -1,4 +1,4 @@
-import { getCleanBoard, setupInitialPositions } from "@/engine/chess";
+import {createNewChessGame, getCleanBoard, setupInitialPositions} from "@/engine/chess";
 import { getPieceString } from "@/engine/utils";
 import { Piece, PieceColor, PieceType, Square } from "./types";
 
@@ -186,4 +186,9 @@ describe("chess", () => {
       }
     });
   });
+  describe("createNewChessGame", () => {
+    it("should create a new game without an error", () => {
+      createNewChessGame();
+    })
+  })
 });
