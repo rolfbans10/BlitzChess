@@ -6,6 +6,7 @@ import {
   PieceType,
   Position,
 } from "@/engine/types";
+import { produce } from "immer";
 
 export const getAllPossibleBasicMoves = (
   chessGame: ChessGame,
@@ -13,6 +14,8 @@ export const getAllPossibleBasicMoves = (
 ): Move[] => {
   const toPlayColor = color || chessGame.toPlay;
   const piecesToPlay: Piece[] = [];
+  
+  // Find all pieces of the current color
   for (let x = 0; x < 8; x++) {
     for (let y = 0; y < 8; y++) {
       const piece = chessGame.board[x][y].piece;
@@ -21,6 +24,8 @@ export const getAllPossibleBasicMoves = (
       }
     }
   }
+  
+  // Get all possible moves for each piece
   let moves: Move[] = [];
   for (const piece of piecesToPlay) {
     if (!piece) {
@@ -28,6 +33,15 @@ export const getAllPossibleBasicMoves = (
     }
     moves.push(...getPieceBasicMoves(chessGame, piece));
   }
+
+  // Update the game state with the valid moves using Immer
+  produce(chessGame, (draft) => {
+    if (toPlayColor === PieceColor.WHITE) {
+      draft.whiteMoves = moves;
+    } else {
+      draft.blackMoves = moves;
+    }
+  });
 
   return moves;
 };
@@ -55,18 +69,24 @@ export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
   let offsets: Position[] = [];
   if (pawn.color === PieceColor.WHITE) {
     offsets = [
-      { x: 1, y: 0 },
-      { x: 2, y: 0 },
-      { x: 1, y: 1 },
-      { x: 1, y: -1 },
+      { x: 1, y: 0 },  // Forward one square
+      { x: 1, y: 1 },  // Capture right
+      { x: 1, y: -1 }, // Capture left
     ];
+    // Add double move only if pawn hasn't moved and is on starting rank
+    if (!pawn.hasMoved && pawn.pos.x === 1) {
+      offsets.push({ x: 2, y: 0 });
+    }
   } else {
     offsets = [
-      { x: -1, y: 0 },
-      { x: -2, y: 0 },
-      { x: -1, y: 1 },
-      { x: -1, y: -1 },
+      { x: -1, y: 0 },  // Forward one square
+      { x: -1, y: 1 },  // Capture right
+      { x: -1, y: -1 }, // Capture left
     ];
+    // Add double move only if pawn hasn't moved and is on starting rank
+    if (!pawn.hasMoved && pawn.pos.x === 6) {
+      offsets.push({ x: -2, y: 0 });
+    }
   }
 
   const possibleMoves: Move[] = [];
@@ -75,31 +95,35 @@ export const getPawnMoves = (game: ChessGame, pawn: Piece): Move[] => {
       x: pawn.pos.x + offset.x,
       y: pawn.pos.y + offset.y,
     };
+    
+    // Skip if move is outside board
     if (!isPositionInsideBoard(to)) {
       continue;
     }
-    if (pawn.hasMoved && Math.abs(offset.x) === 2) {
-      continue;
-    }
-    // check if 1 or 2 is blocked
+
     const destinationSquare = game.board[to.x][to.y];
-    if (Math.abs(offset.y) === 0) {
-      if (Math.abs(offset.x) === 1 && !!destinationSquare.piece) {
+    
+    // Handle forward moves
+    if (offset.y === 0) {
+      // Skip if destination is occupied
+      if (destinationSquare.piece) {
         continue;
       }
-      const inBetweenOffsetX = pawn.color === PieceColor.WHITE ? -1 : 1;
-      const squareInBetween = game.board[to.x + inBetweenOffsetX][to.y];
-      if (Math.abs(offset.x) === 2 && !!squareInBetween.piece) {
+      
+      // For double moves, check if intermediate square is empty
+      if (Math.abs(offset.x) === 2) {
+        const intermediateX = pawn.pos.x + (offset.x / 2);
+        if (game.board[intermediateX][to.y].piece) {
+          continue;
+        }
+      }
+    } 
+    // Handle capture moves
+    else {
+      // Skip if no piece to capture or piece is same color
+      if (!destinationSquare.piece || destinationSquare.piece.color === pawn.color) {
         continue;
       }
-    }
-    // only on capture allowed left and right
-    if (
-      Math.abs(offset.y) > 0 &&
-      (destinationSquare.piece?.color === pawn.color ||
-        !destinationSquare.piece)
-    ) {
-      continue;
     }
 
     possibleMoves.push({

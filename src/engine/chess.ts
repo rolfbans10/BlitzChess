@@ -237,51 +237,44 @@ export const validateMove = (
   moveColor?: PieceColor,
 ): boolean => {
   const color = moveColor || game.toPlay;
-  const newGame = { ...game };
-  const validMoves =
-    color === PieceColor.WHITE ? newGame.whiteMoves : newGame.blackMoves;
-
-  console.log(game);
-  return validMoves.includes(move);
+  const validMoves = color === PieceColor.WHITE ? game.whiteMoves : game.blackMoves;
+  
+  // Check if the move exists in the list of valid moves
+  return validMoves.some(
+    (validMove) =>
+      validMove.from.x === move.from.x &&
+      validMove.from.y === move.from.y &&
+      validMove.to.x === move.to.x &&
+      validMove.to.y === move.to.y
+  );
 };
 
 export const movePiece = (game: ChessGame, move: Move): ChessGame => {
-  const fromSquare = game.board[move.from.x][move.from.y];
-  const toSquare = game.board[move.to.x][move.to.y];
+  return produce(game, (draft) => {
+    const fromSquare = game.board[move.from.x][move.from.y];
+    const toSquare = game.board[move.to.x][move.to.y];
+    
+    if (!fromSquare.piece) {
+      throw new Error("No piece to move");
+    }
 
-  if (!fromSquare.piece) {
-    throw new Error("from square is empty");
-  }
+    // Handle capture
+    if (toSquare.piece) {
+      draft.capturedPieces.push(toSquare.piece);
+    }
 
-  if (toSquare.piece && toSquare.piece.color === fromSquare.piece.color) {
-    throw new Error("cannot capture piece of the same color");
-  }
-  const newGame: ChessGame = produce(
-    game,
-    (draft: WritableDraft<ChessGame>) => {
-      const fromSquare = draft.board[move.from.x][move.from.y];
-      const toSquare = draft.board[move.to.x][move.to.y];
-      if (fromSquare.piece) {
-        if (toSquare.piece) {
-          // capture
-          draft.capturedPieces.push({ ...toSquare.piece });
-        }
+    // Move the piece
+    draft.board[move.to.x][move.to.y].piece = {
+      ...fromSquare.piece,
+      pos: move.to,
+      hasMoved: true,
+    };
+    draft.board[move.from.x][move.from.y].piece = null;
 
-        fromSquare.piece.hasMoved = true;
-        fromSquare.piece.pos = move.to;
-        toSquare.piece = { ...fromSquare.piece };
-        fromSquare.piece = null;
-
-        draft.moves.push(move);
-        draft.lastMove = move;
-        draft.toPlay = getOppositeColor(draft.toPlay);
-        draft.whiteMoves = getAllPossibleBasicMoves(draft, PieceColor.WHITE);
-        draft.blackMoves = getAllPossibleBasicMoves(draft, PieceColor.BLACK);
-      }
-    },
-  );
-
-  return newGame;
+    // Update game state
+    draft.moves.push(move);
+    draft.toPlay = getOppositeColor(game.toPlay);
+  });
 };
 
 export const defaultPlayer1: Player = {

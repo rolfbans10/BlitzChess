@@ -6,6 +6,7 @@ import { ChessGame, Move, PieceColor } from "@/engine/types";
 import { getAllPossibleBasicMoves } from "@/engine/basic-moves";
 import { getKing, movePiece } from "@/engine/chess";
 import { getOppositeColor } from "@/engine/utils";
+import { produce } from "immer";
 
 /**
  * Check
@@ -49,7 +50,6 @@ export const doesMoveDiscoverCheckOnMyKing = (
   myKingColor?: PieceColor,
 ): boolean => {
   const myColor = myKingColor || game.toPlay;
-
   const newGame = movePiece(game, move);
   return isCheck(newGame, myColor);
 };
@@ -82,24 +82,20 @@ export const filterAllInvalidMoves = (
     return [];
   }
 
-  const tempGame = { ...game };
-
   return moves
-    .filter((move) => canMoveEscapeCheck(tempGame, move, moveColor))
+    .filter((move) => canMoveEscapeCheck(game, move, moveColor))
     .filter(
-      (move) => !doesMoveDiscoverCheckOnMyKing(tempGame, move, moveColor),
+      (move) => !doesMoveDiscoverCheckOnMyKing(game, move, moveColor),
     );
 };
 
 export const placePieceBlindly = (game: ChessGame, move: Move): ChessGame => {
-  const newGame = { ...game };
-  const fromPiece = game.board[move.from.x][move.from.y].piece;
-
-  if (!fromPiece) {
-    throw new Error("from square is empty");
-  }
-  newGame.board[move.to.x][move.to.y].piece = { ...fromPiece, pos: move.to };
-  newGame.board[move.from.x][move.from.y].piece = null;
-
-  return newGame;
+  return produce(game, (draft) => {
+    const fromPiece = game.board[move.from.x][move.from.y].piece;
+    if (!fromPiece) {
+      throw new Error("from square is empty");
+    }
+    draft.board[move.to.x][move.to.y].piece = { ...fromPiece, pos: move.to };
+    draft.board[move.from.x][move.from.y].piece = null;
+  });
 };
