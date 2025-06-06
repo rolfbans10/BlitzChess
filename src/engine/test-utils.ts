@@ -20,7 +20,12 @@ export const createTestGame = (overrides?: Partial<ChessGame>): ChessGame => ({
   lastMove: null,
   whiteMoves: [],
   blackMoves: [],
-
+  castlingRights: {
+    whiteKingside: true,
+    whiteQueenside: true,
+    blackKingside: true,
+    blackQueenside: true,
+  },
   ...overrides,
 });
 

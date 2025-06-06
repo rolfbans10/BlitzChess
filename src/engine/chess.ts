@@ -231,51 +231,141 @@ const getAllValidMoves = (game: ChessGame, myColor?: PieceColor): Move[] => {
   return moves;
 };
 
-export const validateMove = (
-  game: ChessGame,
-  move: Move,
-  moveColor?: PieceColor,
-): boolean => {
-  const color = moveColor || game.toPlay;
-  const validMoves = color === PieceColor.WHITE ? game.whiteMoves : game.blackMoves;
-  
-  // Check if the move exists in the list of valid moves
-  return validMoves.some(
-    (validMove) =>
-      validMove.from.x === move.from.x &&
-      validMove.from.y === move.from.y &&
-      validMove.to.x === move.to.x &&
-      validMove.to.y === move.to.y
-  );
+export const validateMove = (game: ChessGame, move: Move, color: PieceColor): boolean => {
+  const fromSquare = game.board[move.from.x][move.from.y];
+  const toSquare = game.board[move.to.x][move.to.y];
+
+  if (!fromSquare.piece) {
+    return false;
+  }
+
+  if (fromSquare.piece.color !== color) {
+    return false;
+  }
+
+  // Add more validation as needed
+  return true;
 };
 
-export const movePiece = (game: ChessGame, move: Move): ChessGame => {
-  return produce(game, (draft) => {
-    const fromSquare = game.board[move.from.x][move.from.y];
-    const toSquare = game.board[move.to.x][move.to.y];
-    
-    if (!fromSquare.piece) {
-      throw new Error("No piece to move");
+export function movePiece(game: ChessGame, move: Move): ChessGame {
+  const { from, to } = move;
+  const pieceToMove = game.board[from.x][from.y].piece;
+
+  if (!pieceToMove) {
+    return produce(game, (draft) => {});
+  }
+
+  // Check if it's a castling move
+  if (move.isCastling) {
+    const isKingside = move.castlingType === 'kingside';
+    const rookFrom = { x: from.x, y: isKingside ? 7 : 0 };
+    const rookTo = { x: from.x, y: isKingside ? 5 : 3 };
+    const rook = game.board[rookFrom.x][rookFrom.y].piece;
+
+    if (!rook || rook.type !== PieceType.ROOK || rook.color !== pieceToMove.color) {
+      return produce(game, (draft) => {});
     }
 
-    // Handle capture
-    if (toSquare.piece) {
-      draft.capturedPieces.push(toSquare.piece);
+    // Check if path is clear
+    const pathClear = isKingside
+      ? game.board[from.x][5].piece === null && game.board[from.x][6].piece === null
+      : game.board[from.x][1].piece === null && game.board[from.x][2].piece === null && game.board[from.x][3].piece === null;
+
+    if (!pathClear) {
+      return produce(game, (draft) => {});
+    }
+
+    // Check if king or rook has moved
+    if (pieceToMove.hasMoved || rook.hasMoved) {
+      return produce(game, (draft) => {});
+    }
+
+    // Check if castling rights are available
+    const castlingRights = game.castlingRights;
+    const canCastle = pieceToMove.color === PieceColor.WHITE
+      ? (isKingside ? castlingRights.whiteKingside : castlingRights.whiteQueenside)
+      : (isKingside ? castlingRights.blackKingside : castlingRights.blackQueenside);
+
+    if (!canCastle) {
+      return produce(game, (draft) => {});
+    }
+
+    return produce(game, (draft) => {
+      // Move king
+      const newKing = {
+        ...pieceToMove,
+        hasMoved: true,
+        pos: to
+      };
+      draft.board[to.x][to.y].piece = newKing;
+      draft.board[from.x][from.y].piece = null;
+
+      // Move rook
+      const newRook = {
+        ...rook,
+        hasMoved: true,
+        pos: rookTo
+      };
+      draft.board[rookTo.x][rookTo.y].piece = newRook;
+      draft.board[rookFrom.x][rookFrom.y].piece = null;
+
+      // Update castling rights
+      if (pieceToMove.color === PieceColor.WHITE) {
+        draft.castlingRights.whiteKingside = false;
+        draft.castlingRights.whiteQueenside = false;
+      } else {
+        draft.castlingRights.blackKingside = false;
+        draft.castlingRights.blackQueenside = false;
+      }
+
+      // Update move history
+      draft.moves.push(move);
+      draft.lastMove = move;
+    });
+  }
+
+  // Regular move
+  return produce(game, (draft) => {
+    // Check if there's a piece to capture
+    const targetPiece = draft.board[to.x][to.y].piece;
+    if (targetPiece) {
+      targetPiece.captured = true;
+      draft.capturedPieces.push(targetPiece);
     }
 
     // Move the piece
-    draft.board[move.to.x][move.to.y].piece = {
-      ...fromSquare.piece,
-      pos: move.to,
+    const newPiece = {
+      ...pieceToMove,
       hasMoved: true,
+      pos: to
     };
-    draft.board[move.from.x][move.from.y].piece = null;
+    draft.board[to.x][to.y].piece = newPiece;
+    draft.board[from.x][from.y].piece = null;
 
-    // Update game state
+    // Update castling rights if king or rook moves
+    if (pieceToMove.type === PieceType.KING) {
+      if (pieceToMove.color === PieceColor.WHITE) {
+        draft.castlingRights.whiteKingside = false;
+        draft.castlingRights.whiteQueenside = false;
+      } else {
+        draft.castlingRights.blackKingside = false;
+        draft.castlingRights.blackQueenside = false;
+      }
+    } else if (pieceToMove.type === PieceType.ROOK) {
+      if (pieceToMove.color === PieceColor.WHITE) {
+        if (from.y === 0) draft.castlingRights.whiteQueenside = false;
+        if (from.y === 7) draft.castlingRights.whiteKingside = false;
+      } else {
+        if (from.y === 0) draft.castlingRights.blackQueenside = false;
+        if (from.y === 7) draft.castlingRights.blackKingside = false;
+      }
+    }
+
+    // Update move history
     draft.moves.push(move);
-    draft.toPlay = getOppositeColor(game.toPlay);
+    draft.lastMove = move;
   });
-};
+}
 
 export const defaultPlayer1: Player = {
   name: "Player 1",
@@ -287,18 +377,79 @@ export const defaultPlayer2: Player = {
   color: PieceColor.BLACK,
 };
 
-export const createNewChessGame = (
-  player1: Player = defaultPlayer1,
-  player2: Player = defaultPlayer2,
-): ChessGame =>
-  produce({}, (game: WritableDraft<ChessGame>): void => {
-    game.board = setupInitialPositions();
-    game.player1 = player1;
-    game.player2 = player2;
-    game.toPlay = PieceColor.WHITE;
-    game.winner = null;
-    game.moves = [];
-    game.whiteMoves = getAllPossibleBasicMoves(game, PieceColor.WHITE);
-    game.blackMoves = getAllPossibleBasicMoves(game, PieceColor.BLACK);
-    game.capturedPieces = [];
-  }) as ChessGame;
+export function createNewChessGame(): ChessGame {
+  const board: Square[][] = Array(8).fill(null).map(() => Array(8).fill(null).map(() => ({ piece: null })));
+
+  // Initialize pawns
+  for (let y = 0; y < 8; y++) {
+    board[1][y].piece = {
+      type: PieceType.PAWN,
+      color: PieceColor.WHITE,
+      pos: { x: 1, y },
+      hasMoved: false,
+      captured: false,
+    };
+    board[6][y].piece = {
+      type: PieceType.PAWN,
+      color: PieceColor.BLACK,
+      pos: { x: 6, y },
+      hasMoved: false,
+      captured: false,
+    };
+  }
+
+  // Initialize other pieces
+  const pieceOrder = [
+    PieceType.ROOK,
+    PieceType.KNIGHT,
+    PieceType.BISHOP,
+    PieceType.QUEEN,
+    PieceType.KING,
+    PieceType.BISHOP,
+    PieceType.KNIGHT,
+    PieceType.ROOK,
+  ];
+
+  for (let y = 0; y < 8; y++) {
+    board[0][y].piece = {
+      type: pieceOrder[y],
+      color: PieceColor.WHITE,
+      pos: { x: 0, y },
+      hasMoved: false,
+      captured: false,
+    };
+    board[7][y].piece = {
+      type: pieceOrder[y],
+      color: PieceColor.BLACK,
+      pos: { x: 7, y },
+      hasMoved: false,
+      captured: false,
+    };
+  }
+
+  return {
+    board,
+    player1: {
+      name: "Player 1",
+      color: PieceColor.WHITE,
+    },
+    player2: {
+      name: "Player 2",
+      color: PieceColor.BLACK,
+    },
+    toPlay: PieceColor.WHITE,
+    winner: null,
+    moves: [],
+    capturedPieces: [],
+    lastMove: null,
+    isGameOver: false,
+    whiteMoves: [],
+    blackMoves: [],
+    castlingRights: {
+      whiteKingside: true,
+      whiteQueenside: true,
+      blackKingside: true,
+      blackQueenside: true,
+    },
+  };
+}

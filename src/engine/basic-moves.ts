@@ -262,6 +262,8 @@ export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
     { x: -1, y: 1 },
     { x: -1, y: -1 },
   ];
+
+  // Regular king moves
   for (const step of steps) {
     let to = {
       x: king.pos.x + step.x,
@@ -279,5 +281,51 @@ export const getKingMoves = (game: ChessGame, king: Piece): Move[] => {
       to,
     });
   }
+
+  // Castling moves
+  if (!king.hasMoved && game.castlingRights) {
+    const isWhite = king.color === PieceColor.WHITE;
+    const row = isWhite ? 0 : 7;
+    const rights = game.castlingRights;
+
+    // Kingside castling
+    if ((isWhite && rights.whiteKingside) || (!isWhite && rights.blackKingside)) {
+      const rook = game.board[row][7].piece;
+      if (rook && !rook.hasMoved && rook.type === PieceType.ROOK) {
+        // Check if squares between king and rook are empty
+        const canCastle = [5, 6].every(
+          (y) => !game.board[row][y].piece
+        );
+        if (canCastle) {
+          possibleMoves.push({
+            from: king.pos,
+            to: { x: row, y: 6 },
+            isCastling: true,
+            castlingType: 'kingside',
+          });
+        }
+      }
+    }
+
+    // Queenside castling
+    if ((isWhite && rights.whiteQueenside) || (!isWhite && rights.blackQueenside)) {
+      const rook = game.board[row][0].piece;
+      if (rook && !rook.hasMoved && rook.type === PieceType.ROOK) {
+        // Check if squares between king and rook are empty
+        const canCastle = [1, 2, 3].every(
+          (y) => !game.board[row][y].piece
+        );
+        if (canCastle) {
+          possibleMoves.push({
+            from: king.pos,
+            to: { x: row, y: 2 },
+            isCastling: true,
+            castlingType: 'queenside',
+          });
+        }
+      }
+    }
+  }
+
   return possibleMoves;
 };

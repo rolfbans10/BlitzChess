@@ -47,6 +47,12 @@ export interface ChessGame {
   isGameOver: boolean;
   whiteMoves: Move[];
   blackMoves: Move[];
+  castlingRights: {
+    whiteKingside: boolean;
+    whiteQueenside: boolean;
+    blackKingside: boolean;
+    blackQueenside: boolean;
+  };
 }
 
 export interface Move {
@@ -57,4 +63,5 @@ export interface Move {
   isPromotion?: boolean;
   isCastling?: boolean;
   isEnPassant?: boolean;
+  castlingType?: 'kingside' | 'queenside';
 }
